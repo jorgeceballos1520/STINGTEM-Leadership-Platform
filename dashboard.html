@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API Dashboard | Instructional Leadership Platform</title>
+<style>
+:root{--navy:#13263a;--navy2:#1e3d5b;--paper:#f4f1ea;--card:#fff;--line:#ddd8cf;--muted:#687789;--blue:#1677b8;--green:#39734b;--red:#b94831;--shadow:0 10px 28px rgba(19,38,58,.10)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eaf0f5 0,var(--paper) 300px);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.app{max-width:1200px;margin:auto;padding:22px 16px 60px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{font-weight:900}.small{font-size:12px;color:var(--muted)}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:18px;padding:26px;box-shadow:var(--shadow);margin-bottom:16px}.hero h1{font-family:Georgia,serif;margin:0 0 5px}.hero p{margin:0;color:#dce6ef}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow);margin-bottom:15px}
+.auth{text-align:center;padding:35px}.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.btn-primary{background:var(--navy);color:#fff}.btn-secondary{background:#edf1f4;color:var(--navy)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}.metric .value{font-size:28px;font-weight:900}.metric .label{font-size:12px;color:var(--muted);margin-top:4px}
+.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}label{display:block;font-size:12px;font-weight:800;color:#566373;margin-bottom:5px}select,input{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px}th{font-size:11px;text-transform:uppercase;color:var(--muted)}tr:hover{background:#faf9f6}.link-btn{background:none;border:0;color:var(--blue);font-weight:800;cursor:pointer}
+.drawer{display:none}.drawer.open{display:block}.drawer h2{font-family:Georgia,serif}.period{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px;margin:10px 0}.period-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.box{background:#f8f7f3;border-radius:8px;padding:8px}.box b{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}.reflection{margin:12px 0}.reflection b{display:block;margin-bottom:4px}.status{padding:12px;border-radius:10px;background:#f9e4dd;color:#7a2c1b;display:none}.status.show{display:block}
+@media(max-width:800px){.metrics{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.period-grid{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start;gap:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar">
+<div><div class="brand">Instructional Leadership Platform</div><div class="small">API Dashboard v1.0</div></div>
+<div id="userArea"></div>
+</div>
+
+<section class="hero">
+<h1>Jorge Ceballos — API Dashboard</h1>
+<p>Review teacher Exit Ticket, assessment, and PLC submissions in one place.</p>
+</section>
+
+<section class="card auth" id="authCard">
+<h2>Administrator sign-in</h2>
+<p>Sign in with your authorized Google work account to access teacher submissions.</p>
+<button class="btn btn-primary" id="signInBtn">Sign in with Google</button>
+<div id="authStatus" class="status"></div>
+</section>
+
+<div id="dashboard" style="display:none">
+<section class="metrics">
+<div class="metric"><div class="value" id="totalCount">0</div><div class="label">Total submissions</div></div>
+<div class="metric"><div class="value" id="etCount">0</div><div class="label">Exit Tickets</div></div>
+<div class="metric"><div class="value" id="assessmentCount">0</div><div class="label">Assessments</div></div>
+<div class="metric"><div class="value" id="plcCount">0</div><div class="label">PLC entries</div></div>
+</section>
+
+<section class="card" style="margin-top:15px">
+<div class="filters">
+<div><label>Teacher</label><select id="teacherFilter"><option value="">All teachers</option></select></div>
+<div><label>Submission type</label><select id="typeFilter"><option value="">All types</option><option>Exit Ticket</option><option>Exam/Assessment</option><option>PLC Data</option></select></div>
+<button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+</div>
+</section>
+
+<section class="card">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Date</th><th>Teacher</th><th>Course</th><th>Type</th><th>Name</th><th>Periods</th><th>M+M+A</th><th></th></tr></thead>
+<tbody id="submissionRows"></tbody>
+</table>
+</div>
+<div id="emptyMessage" class="small" style="padding:20px;text-align:center;display:none">No matching submissions found.</div>
+</section>
+
+<section class="card drawer" id="detailDrawer">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+<div><h2 id="detailTitle"></h2><div class="small" id="detailMeta"></div></div>
+<button class="btn btn-secondary" id="closeDrawer">Close</button>
+</div>
+<div id="detailPeriods"></div>
+<div id="detailReflection"></div>
+</section>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
+authDomain:"idea-spears.firebaseapp.com",
+projectId:"idea-spears",
+storageBucket:"idea-spears.firebasestorage.app",
+messagingSenderId:"619672486663",
+appId:"1:619672486663:web:8672bb614d892ea00e7ba2",
+measurementId:"G-0SCW3PVT1D"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+const provider=new GoogleAuthProvider();
+
+const authCard=document.getElementById("authCard");
+const dashboard=document.getElementById("dashboard");
+const authStatus=document.getElementById("authStatus");
+const userArea=document.getElementById("userArea");
+const teacherFilter=document.getElementById("teacherFilter");
+const typeFilter=document.getElementById("typeFilter");
+const rows=document.getElementById("submissionRows");
+const emptyMessage=document.getElementById("emptyMessage");
+let submissions=[];
+
+document.getElementById("signInBtn").addEventListener("click",async()=>{
+authStatus.className="status";
+try{await signInWithPopup(auth,provider)}
+catch(err){console.error(err);authStatus.className="status show";authStatus.textContent="Sign-in failed. Confirm Google Authentication and the GitHub Pages domain are enabled in Firebase."}
+});
+
+document.getElementById("refreshBtn").addEventListener("click",loadSubmissions);
+teacherFilter.addEventListener("change",render);
+typeFilter.addEventListener("change",render);
+document.getElementById("closeDrawer").addEventListener("click",()=>document.getElementById("detailDrawer").classList.remove("open"));
+
+onAuthStateChanged(auth,user=>{
+if(user){
+authCard.style.display="none";dashboard.style.display="block";
+userArea.innerHTML=`<span class="small">${escapeHtml(user.email||"Signed in")}</span> <button class="btn btn-secondary" id="signOutBtn">Sign out</button>`;
+document.getElementById("signOutBtn").addEventListener("click",()=>signOut(auth));
+loadSubmissions();
+}else{
+authCard.style.display="block";dashboard.style.display="none";userArea.innerHTML="";
+}
+});
+
+async function loadSubmissions(){
+rows.innerHTML='<tr><td colspan="8">Loading submissions…</td></tr>';
+try{
+const snap=await getDocs(query(collection(db,"instructionalSubmissions"),orderBy("createdAt","desc")));
+submissions=snap.docs.map(d=>({id:d.id,...d.data()}));
+populateTeacherFilter();
+updateMetrics();
+render();
+}catch(err){
+console.error(err);
+rows.innerHTML='<tr><td colspan="8">Unable to read submissions. Update the Firestore read rule for authenticated administrators.</td></tr>';
+}
+}
+
+function populateTeacherFilter(){
+const current=teacherFilter.value;
+const names=[...new Set(submissions.map(s=>s.teacherName).filter(Boolean))].sort();
+teacherFilter.innerHTML='<option value="">All teachers</option>'+names.map(n=>`<option>${escapeHtml(n)}</option>`).join("");
+teacherFilter.value=current;
+}
+
+function updateMetrics(){
+document.getElementById("totalCount").textContent=submissions.length;
+document.getElementById("etCount").textContent=submissions.filter(s=>s.submissionType==="Exit Ticket").length;
+document.getElementById("assessmentCount").textContent=submissions.filter(s=>s.submissionType==="Exam/Assessment").length;
+document.getElementById("plcCount").textContent=submissions.filter(s=>s.submissionType==="PLC Data").length;
+}
+
+function render(){
+const filtered=submissions.filter(s=>(!teacherFilter.value||s.teacherName===teacherFilter.value)&&(!typeFilter.value||s.submissionType===typeFilter.value));
+rows.innerHTML=filtered.map(s=>{
+const pct=s.totals?.mastersMeetsApproachesPercent ?? s.totals?.masteredOrMetPercent ?? "";
+return `<tr>
+<td>${escapeHtml(s.submissionDate||"")}</td>
+<td>${escapeHtml(s.teacherName||"")}</td>
+<td>${escapeHtml(s.course||"")}</td>
+<td>${escapeHtml(s.submissionType||"")}</td>
+<td>${escapeHtml(s.assessmentName||"")}</td>
+<td>${Array.isArray(s.periods)?s.periods.length:0}</td>
+<td>${pct!==""?pct+"%":""}</td>
+<td><button class="link-btn" data-id="${s.id}">View</button></td>
+</tr>`}).join("");
+emptyMessage.style.display=filtered.length?"none":"block";
+rows.querySelectorAll("[data-id]").forEach(btn=>btn.addEventListener("click",()=>showDetail(btn.dataset.id)));
+}
+
+function showDetail(id){
+const s=submissions.find(x=>x.id===id);if(!s)return;
+document.getElementById("detailTitle").textContent=`${s.teacherName||"Teacher"} — ${s.assessmentName||"Submission"}`;
+document.getElementById("detailMeta").textContent=`${s.submissionDate||""} • ${s.submissionType||""} • ${s.course||""}`;
+document.getElementById("detailPeriods").innerHTML=(s.periods||[]).map(p=>{
+const assessed=Number(p.assessed)||0;
+const pct=assessed?Math.round(((Number(p.mastered)||0)+(Number(p.met)||0)+(Number(p.approached)||0))/assessed*100):0;
+return `<div class="period"><b>Period ${p.period}</b><div class="small" style="margin:4px 0 9px">${escapeHtml(p.objective||"")}</div>
+<div class="period-grid">
+<div class="box"><b>Assessed</b>${assessed}</div>
+<div class="box"><b>Masters</b>${Number(p.mastered)||0}</div>
+<div class="box"><b>Meets</b>${Number(p.met)||0}</div>
+<div class="box"><b>Approaches</b>${Number(p.approached)||0}</div>
+<div class="box"><b>Did not meet</b>${Number(p.didNotMeet)||0}</div>
+<div class="box"><b>M+M+A</b>${pct}%</div>
+</div></div>`}).join("");
+document.getElementById("detailReflection").innerHTML=[
+["Misconceptions",s.misconceptions],["Outcome",s.outcome],["Causes",s.causes],["Solutions",s.solutions]
+].map(([label,value])=>`<div class="reflection"><b>${label}</b><div>${escapeHtml(value||"—")}</div></div>`).join("");
+document.getElementById("detailDrawer").classList.add("open");
+document.getElementById("detailDrawer").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+</script>
+</body>
+</html>
