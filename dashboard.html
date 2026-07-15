@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IDEA Spears Instructional Leadership Platform v2.1</title>
+<title>IDEA Spears Instructional Leadership Platform v2.2</title>
 <style>
 :root{--navy:#17283c;--navy2:#253f5b;--paper:#f5f3ed;--card:#fff;--line:#dedbd1;--muted:#667487;--blue:#1677b8;--gold:#c9972d;--goldbg:#fbf0d8;--red:#b94831;--redbg:#f9e4dd;--green:#39734b;--greenbg:#e3f0e6;--purple:#654ea3;--purplebg:#eee9fb;--shadow:0 7px 22px rgba(24,40,60,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -33,7 +33,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{padding:9px;bor
 .level{padding:10px;border-radius:9px;text-align:center}.level strong{font-size:20px;display:block}.master{background:#e6f2e8}.meet{background:#e7eff8}.approach{background:#fbf0d8}.notmeet{background:#f9e4dd}
 .ocs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.ocs>div{padding:11px;border-radius:9px;background:#f7f7f4;border:1px solid var(--line)}.presentation{background:#fff;padding:24px;border-radius:14px}.presentation h1{margin:0 0 4px}.metric{font-size:30px;font-weight:800}.no-print{}
 .loading{padding:60px;text-align:center;color:var(--muted)}
-@media print{aside,.no-print,.delete,.statusSelect{display:none!important}main{padding:0;max-width:none}.panel,.card,.stat{box-shadow:none;break-inside:avoid}body{background:#fff}.presentation{padding:0}}
+@media print{aside,.no-print,.delete,.statusSelect,.goalStatusSelect{display:none!important}main{padding:0!important;max-width:none!important}.panel,.card,.stat{box-shadow:none!important;break-inside:avoid}.panel{border:1px solid #ddd!important}body{background:#fff!important}.presentation{padding:0!important}.presentation h1{font-size:24px}table{font-size:11px}}
 @media(max-width:900px){#app{display:block}aside{position:static;width:auto;height:auto}main{padding:20px}.stats,.two,.three,.four,.gg,.ocs{grid-template-columns:1fr}.page-head{display:block}.page-head .btn{margin-top:10px}}
 </style>
 </head>
@@ -398,7 +398,12 @@ function teacherProgressPage(id){
   const ratedObs=os.filter(o=>o.rating&&o.rating!=="Not Rated");
 
   return `<div class="page-head no-print"><div><button class="btn" id="backProgress">&larr; Progress Reports</button><h2 class="serif" style="margin-top:12px">${esc(t.name)}'s Progress Report</h2><div class="sub">${esc(t.subject)}</div></div>
-  <div><button class="btn" id="newGoal">+ Add Goal</button> <button class="btn btn-primary" onclick="window.print()">Print / Share</button></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+    <button class="btn" id="newGoal">+ Add Goal</button>
+    <button class="btn" onclick="printProgressReport()">Print</button>
+    <button class="btn btn-primary" onclick="saveProgressReportPDF()">Download / Save PDF</button>
+    <button class="btn" onclick="emailProgressReport('${id}')">Email Teacher</button>
+  </div></div>
 
   <div class="presentation">
   <div class="entry-head" style="align-items:center;margin-bottom:6px"><img src="${MASCOT_URI}" alt="IDEA Spears Scorpions" style="width:54px;height:auto"><div><h1 class="serif" style="margin:0">${esc(t.name)} \u2014 Progress Report</h1><div class="sub">IDEA Spears &middot; ${fmt(new Date().toISOString().slice(0,10))}</div></div></div>
@@ -418,7 +423,7 @@ function teacherProgressPage(id){
 
   <div class="two">
     <div class="panel"><h3>Exit Ticket Progression</h3>
-    ${ets.length?`<div class="row"><span>Trend since first entry</span>${trendArrow(etPcts[0],etPcts[etPcts.length-1])}</div><table><thead><tr><th>Date</th><th>Objective / Period</th><th>Mastered/Met %</th></tr></thead><tbody>${ets.map((e,i)=>`<tr><td>${fmt(e.date)}</td><td>${esc(e.objective)}<div class="small muted">Period ${esc(e.period)}</div></td><td><b>${etPcts[i]}%</b></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No exit ticket data yet.</div>`}
+    ${ets.length?`<div class="row"><span>Trend since first entry</span>${trendArrow(etPcts[0],etPcts[etPcts.length-1])}</div><table><thead><tr><th>Date</th><th>Objective / Period</th><th>M+M+A %</th></tr></thead><tbody>${ets.map((e,i)=>`<tr><td>${fmt(e.date)}</td><td>${esc(e.objective)}<div class="small muted">Period ${esc(e.period)}</div></td><td><b>${etPcts[i]}%</b></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No exit ticket data yet.</div>`}
     </div>
     <div class="panel"><h3>Exam Progression</h3>
     ${xs.length?`<div class="row"><span>Trend since first entry</span>${trendArrow(examPcts[0],examPcts[examPcts.length-1])}</div><table><thead><tr><th>Date</th><th>Exam / Period</th><th>% Proficient</th></tr></thead><tbody>${xs.map((x,i)=>`<tr><td>${fmt(x.date)}</td><td>${esc(x.examName)}<div class="small muted">Period ${esc(x.period)}</div></td><td><b>${examPcts[i]}%</b></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No exam data yet.</div>`}
@@ -433,6 +438,68 @@ function teacherProgressPage(id){
   ${os.length?`<table><thead><tr><th>Date</th><th>Phase</th><th>Skill</th><th>Status</th></tr></thead><tbody>${os.map(o=>`<tr><td>${fmt(o.date)}</td><td>${esc(o.gbfPhase)}</td><td>${esc(o.gbfAction)}</td><td><span class="badge ${statusClass(o.status)}">${esc(o.status)}</span></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No GBF coaching records yet.</div>`}
   </div>
   </div>`;
+}
+
+
+function printProgressReport(){
+  window.print();
+}
+
+function saveProgressReportPDF(){
+  alert(
+    'Your browser print window will open. Under Destination or Printer, choose "Save as PDF," then click Save.'
+  );
+  window.print();
+}
+
+function progressEmailSummary(id){
+  const t=teacher(id);
+  const goals=goalsFor(id);
+  const os=obsFor(id);
+  const ets=etFor(id);
+  const xs=examsFor(id);
+
+  const latestET=ets[0];
+  const latestExam=xs[0];
+  const latestObs=os[0];
+
+  const etPercent=latestET
+    ? pct(
+        (+latestET.master||0)+
+        (+latestET.meet||0)+
+        (+latestET.approach||0),
+        totalET(latestET)
+      )
+    : null;
+
+  return [
+    `Hello ${t.name},`,
+    '',
+    'Attached or included is your current instructional progress report.',
+    '',
+    `Course: ${t.subject}`,
+    `Latest Exit Ticket M+M+A: ${etPercent===null?'No data yet':etPercent+'%'}`,
+    `Latest Exam Proficiency: ${latestExam?(+latestExam.proficiency||0)+'%':'No data yet'}`,
+    `Coaching Records: ${os.length}`,
+    `Goals Met: ${goals.filter(g=>g.status==='Met').length} of ${goals.length}`,
+    '',
+    latestObs ? `Current Action Step: ${latestObs.actionStep||'Not entered'}` : 'Current Action Step: No observation entered yet',
+    '',
+    'Please review the progress report before our next coaching conversation.',
+    '',
+    'Jorge Ceballos',
+    'Assistant Principal of Instruction'
+  ].join('\n');
+}
+
+function emailProgressReport(id){
+  const t=teacher(id);
+  const subject=encodeURIComponent(`${t.name} - Instructional Progress Report`);
+  const body=encodeURIComponent(
+    progressEmailSummary(id) +
+    '\n\nTo include the full report as a PDF:\n1. Click Download / Save PDF.\n2. Save the PDF to your computer.\n3. Attach it to this email.'
+  );
+  window.location.href=`mailto:?subject=${subject}&body=${body}`;
 }
 
 function principal(){
