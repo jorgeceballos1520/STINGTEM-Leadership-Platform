@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IDEA Spears Instructional Leadership Platform</title>
+<title>IDEA Spears Instructional Leadership Platform v2.1</title>
 <style>
 :root{--navy:#17283c;--navy2:#253f5b;--paper:#f5f3ed;--card:#fff;--line:#dedbd1;--muted:#667487;--blue:#1677b8;--gold:#c9972d;--goldbg:#fbf0d8;--red:#b94831;--redbg:#f9e4dd;--green:#39734b;--greenbg:#e3f0e6;--purple:#654ea3;--purplebg:#eee9fb;--shadow:0 7px 22px rgba(24,40,60,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -196,6 +196,7 @@ function teacher(id){return TEACHERS.find(t=>t.id===id)||{name:"",subject:""}}
 function obsFor(id){return state.observations.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
 function etFor(id){return state.exitTickets.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
 function examsFor(id){return state.exams.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
+function goalsFor(id){return state.goals.filter(g=>g.teacherId===id).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""))}
 function activeFor(id){return obsFor(id).filter(o=>!["Mastered","Sustaining"].includes(o.status))}
 function totalET(x){return (+x.master||0)+(+x.meet||0)+(+x.approach||0)+(+x.notMeet||0)}
 function pct(n,t){return t?Math.round((n/t)*100):0}
@@ -299,7 +300,7 @@ function dashboard(){
   </div>
   <div class="grid">${TEACHERS.map(t=>{
     const os=obsFor(t.id),ets=etFor(t.id),xs=examsFor(t.id),latestET=ets[0];
-    return `<div class="card teacher-card ${t.vacancy?"muted":""}" data-id="${t.id}"><h3>${esc(t.name)}</h3><div class="subject">${esc(t.subject)}</div>${t.vacancy?`<div class="small muted">Position not yet filled</div>`:`<div class="row"><span>${os.length} coaching records</span><span>${activeFor(t.id).length} active steps</span></div><div class="row"><span>${ets.length} exit tickets</span><span>${xs.length} exams</span></div><div class="row"><span>Latest mastery</span><b>${latestET?pct((+latestET.master||0)+(+latestET.meet||0),totalET(latestET))+"%":"\u2014"}</b></div>`}</div>`;
+    return `<div class="card teacher-card ${t.vacancy?"muted":""}" data-id="${t.id}"><h3>${esc(t.name)}</h3><div class="subject">${esc(t.subject)}</div>${t.vacancy?`<div class="small muted">Position not yet filled</div>`:`<div class="row"><span>${os.length} coaching records</span><span>${activeFor(t.id).length} active steps</span></div><div class="row"><span>${ets.length} exit tickets</span><span>${xs.length} exams</span></div><div class="row"><span>Latest M+M+A</span><b>${latestET?pct((+latestET.master||0)+(+latestET.meet||0)+(+latestET.approach||0),totalET(latestET))+"%":"\u2014"}</b></div>`}</div>`;
   }).join("")}</div>`;
 }
 
@@ -402,7 +403,7 @@ function teacherProgressPage(id){
   <div class="presentation">
   <div class="entry-head" style="align-items:center;margin-bottom:6px"><img src="${MASCOT_URI}" alt="IDEA Spears Scorpions" style="width:54px;height:auto"><div><h1 class="serif" style="margin:0">${esc(t.name)} \u2014 Progress Report</h1><div class="sub">IDEA Spears &middot; ${fmt(new Date().toISOString().slice(0,10))}</div></div></div>
   <div class="stats">
-    <div class="stat"><b>${etPcts.length?etPcts[etPcts.length-1]+"%":"\u2014"}</b><span>Latest ET mastery/met</span></div>
+    <div class="stat"><b>${etPcts.length?etPcts[etPcts.length-1]+"%":"\u2014"}</b><span>Latest ET M+M+A</span></div>
     <div class="stat"><b>${examPcts.length?examPcts[examPcts.length-1]+"%":"\u2014"}</b><span>Latest exam proficiency</span></div>
     <div class="stat"><b>${ratedObs.length?esc(ratedObs[ratedObs.length-1].rating):"\u2014"}</b><span>Most recent GET rating</span></div>
     <div class="stat"><b>${goals.filter(g=>g.status==="Met").length}/${goals.length}</b><span>Goals met</span></div>
