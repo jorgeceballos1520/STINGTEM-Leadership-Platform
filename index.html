@@ -1,40 +1,370 @@
-IDEA SPEARS — PERSONAL TEACHER SUBMISSION LINKS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instructional Leadership Platform</title>
+<style>
+:root{
+  --navy:#13263a;--navy2:#1d3955;--paper:#f4f1ea;--card:#fff;--line:#ddd8cf;
+  --muted:#687789;--blue:#1e78b4;--green:#39734b;--red:#b94831;--gold:#c9a227;
+  --shadow:0 10px 30px rgba(19,38,58,.10)
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#eef2f6 0,#f6f3ec 260px);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.app{max-width:1050px;margin:auto;padding:22px 16px 64px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.brand{font-weight:900;letter-spacing:.02em}.version{font-size:12px;color:var(--muted)}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:20px;padding:26px;box-shadow:var(--shadow);margin-bottom:16px}
+.hero h1{font-family:Georgia,serif;margin:0 0 6px;font-size:30px}.hero p{margin:0;color:#dbe4ec}
+.progress-wrap{margin-top:18px}.progress-track{height:8px;background:rgba(255,255,255,.22);border-radius:99px;overflow:hidden}.progress-bar{height:100%;width:20%;background:#fff;border-radius:99px;transition:.25s}.progress-label{font-size:12px;margin-top:7px;color:#dbe4ec}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:15px}
+.step{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e8eff6;color:var(--blue);font-weight:800;margin-right:8px}
+h2{font-family:Georgia,serif;font-size:21px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.field{margin-bottom:13px}.field label{display:block;font-size:12px;font-weight:800;color:#566373;margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:#fff;color:var(--navy);font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #b9d8ee;border-color:var(--blue)}
+textarea{min-height:92px;resize:vertical}
+.teacher-box{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.teacher-name{font-size:24px;font-weight:900}.teacher-course{color:var(--muted);font-size:14px;margin-top:3px}
+.badge{font-size:11px;background:#e7eff8;color:var(--blue);padding:5px 9px;border-radius:99px;font-weight:800}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.type-card{border:1px solid var(--line);border-radius:12px;padding:13px;cursor:pointer;background:#fbfaf7}
+.type-card input{width:auto;margin-right:7px}.type-card:has(input:checked){border-color:var(--blue);background:#eef7fc}
+.period-options{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.period-option{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;background:#faf9f5;cursor:pointer}
+.period-option input{width:auto;margin-right:5px}.period-option:has(input:checked){border-color:var(--blue);background:#eef7fc}
+.period-card{border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:12px;padding:15px;margin:12px 0;background:#fcfcfa}
+.period-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.hint{font-size:11px;color:var(--muted);line-height:1.45}.check{font-size:11px;margin-top:5px}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:12px 17px;font-weight:800;cursor:pointer}
+.btn-primary{background:var(--navy);color:#fff}.btn-secondary{background:#eef1f4;color:var(--navy)}
+.btn:disabled{opacity:.55}.status{display:none;margin-top:12px;padding:12px;border-radius:10px}
+.status.ok{display:block;background:#e3f0e6;color:#245d35}.status.err{display:block;background:#f9e4dd;color:#7a2c1b}
+.required{color:var(--red)}.autosave{font-size:11px;color:var(--muted);margin-top:8px}
+.success{display:none;text-align:center;padding:30px}.success h2{font-size:28px}.success .checkmark{font-size:48px}
+@media(max-width:780px){
+  .grid2,.grid5,.period-options,.type-grid{grid-template-columns:1fr}.teacher-box{display:block}.hero h1{font-size:25px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar">
+  <div class="brand">Instructional Leadership Platform</div>
+  <div class="version">Teacher Portal v3.0</div>
+</div>
 
-Send each teacher only their own link. Teachers do not need to sign in.
+<section class="hero">
+  <h1>Instructional Data Submission</h1>
+  <p>Submit Exit Ticket, assessment, or PLC data for selected instructional periods.</p>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel">Step 1 of 5</div>
+  </div>
+</section>
 
-L. Williams — Intervention
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=INT001
+<section class="card" id="identityCard">
+  <div class="teacher-box">
+    <div>
+      <div class="teacher-name" id="teacherNameDisplay">Teacher link not recognized</div>
+      <div class="teacher-course" id="teacherCourseDisplay">Use a valid personal teacher link.</div>
+    </div>
+    <div class="badge" id="levelDisplay">Personal link</div>
+  </div>
+</section>
 
-T. Chow — 6th Math
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=MTH601
+<form id="portalForm">
+<section class="card">
+  <h2><span class="step">1</span>Submission information</h2>
+  <div class="grid2">
+    <div class="field"><label>Date <span class="required">*</span></label><input id="submissionDate" type="date" required></div>
+    <div class="field"><label>Assessment or activity name <span class="required">*</span></label><input id="assessmentName" required placeholder="Example: ET 8/14, Unit 2 Exam, PLC Review"></div>
+  </div>
+  <div class="field">
+    <label>Submission type <span class="required">*</span></label>
+    <div class="type-grid">
+      <label class="type-card"><input type="radio" name="submissionType" value="Exit Ticket" required>Exit Ticket</label>
+      <label class="type-card"><input type="radio" name="submissionType" value="Exam/Assessment">Exam / Assessment</label>
+      <label class="type-card"><input type="radio" name="submissionType" value="PLC Data">PLC Data</label>
+    </div>
+  </div>
+  <div class="field"><label>Course / subject</label><input id="course" readonly></div>
+</section>
 
-A. Emenonyu — 7th Math
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=MTH701
+<section class="card">
+  <h2><span class="step">2</span>Select instructional periods</h2>
+  <div class="hint">Conference and academic block should remain unselected unless instructional data is being reported for them.</div>
+  <div class="period-options" id="periodOptions" style="margin-top:12px"></div>
+</section>
 
-R. Raybon — 8th Math
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=MTH801
+<section class="card" id="periodDataCard" style="display:none">
+  <h2><span class="step">3</span>Period data</h2>
+  <div id="periodsContainer"></div>
+</section>
 
-G. Naves — Geometry
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=GEO901
+<section class="card">
+  <h2><span class="step">4</span>Instructional analysis</h2>
+  <div class="field"><label>Misconceptions <span class="required">*</span></label><textarea id="misconceptions" required placeholder="What specific misunderstandings or errors did students demonstrate?"></textarea></div>
+  <div class="field"><label>Outcome <span class="required">*</span></label><textarea id="outcome" required placeholder="What did the data show about what students learned and did not learn?"></textarea></div>
+  <div class="field"><label>Causes <span class="required">*</span></label><textarea id="causes" required placeholder="What do you believe contributed to these outcomes?"></textarea></div>
+  <div class="field"><label>Solutions <span class="required">*</span></label><textarea id="solutions" required placeholder="What instructional adjustments will you make?"></textarea></div>
+  <div class="autosave" id="autosaveText">Draft saves automatically on this device.</div>
+</section>
 
-L. Conkleton — Alg 1 - Pre Cal
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=ALG101
+<section class="card" id="submitCard">
+  <h2><span class="step">5</span>Review and submit</h2>
+  <div class="actions">
+    <button class="btn btn-secondary" id="clearDraftBtn" type="button">Clear saved draft</button>
+    <button class="btn btn-primary" id="submitBtn" type="submit">Submit instructional data</button>
+  </div>
+  <div id="status" class="status"></div>
+</section>
+</form>
 
-L. Mosqueda — AP Spanish
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=APSPAN1
+<section class="card success" id="successCard">
+  <div class="checkmark">✓</div>
+  <h2>Submission received</h2>
+  <p id="confirmationText"></p>
+  <button class="btn btn-primary" id="newSubmissionBtn">Start another submission</button>
+</section>
+</div>
 
-R. Quiroz — PE
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=PE001
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
-K. Waddell — PE
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=PE002
+const firebaseConfig={
+  apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
+  authDomain:"idea-spears.firebaseapp.com",
+  projectId:"idea-spears",
+  storageBucket:"idea-spears.firebasestorage.app",
+  messagingSenderId:"619672486663",
+  appId:"1:619672486663:web:8672bb614d892ea00e7ba2",
+  measurementId:"G-0SCW3PVT1D"
+};
 
-K. Abdullah — Spanish
-https://jorgeceballos1520.github.io/Observation-Tracker/?id=SPAN001
+const TEACHERS_BY_ID={
+  INT001:{legacyKey:"williams",name:"L. Williams",course:"Intervention",level:"special",maxPeriods:7},
+  MTH601:{legacyKey:"chow",name:"T. Chow",course:"6th Math",level:"6-7",maxPeriods:6},
+  MTH701:{legacyKey:"emenonyu",name:"A. Emenonyu",course:"7th Math",level:"6-7",maxPeriods:6},
+  MTH801:{legacyKey:"raybon",name:"R. Raybon",course:"8th Math",level:"8",maxPeriods:7},
+  GEO901:{legacyKey:"naves",name:"G. Naves",course:"Geometry",level:"9-12",maxPeriods:7},
+  ALG101:{legacyKey:"conkleton",name:"L. Conkleton",course:"Alg 1 - Pre Cal",level:"9-12",maxPeriods:7},
+  APSPAN1:{legacyKey:"mosqueda",name:"L. Mosqueda",course:"AP Spanish",level:"9-12",maxPeriods:7},
+  PE001:{legacyKey:"quiroz",name:"R. Quiroz",course:"PE",level:"special",maxPeriods:7},
+  PE002:{legacyKey:"waddell",name:"K. Waddell",course:"PE",level:"special",maxPeriods:7},
+  SPAN001:{legacyKey:"abdullah",name:"K. Abdullah",course:"Spanish",level:"9-12",maxPeriods:7}
+};
 
-VACANCIES — NO ACTIVE LINKS YET
-Pre-Cal
-AP Statistics
-AP Physics
+const TEACHER_ID_BY_LEGACY_KEY=Object.fromEntries(
+  Object.entries(TEACHERS_BY_ID).map(([id,profile])=>[profile.legacyKey,id])
+);
 
-When a vacancy is filled, add the new teacher to the directory before distributing a link.
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const params=new URLSearchParams(location.search);
+const requestedTeacherId=(params.get("id")||"").toUpperCase();
+const legacyTeacherKey=(params.get("teacher")||"").toLowerCase();
+const teacherId=requestedTeacherId||TEACHER_ID_BY_LEGACY_KEY[legacyTeacherKey]||"";
+const profile=TEACHERS_BY_ID[teacherId]||null;
+const teacherKey=profile?.legacyKey||legacyTeacherKey||"";
+const draftKey="ilp-draft-"+(teacherId||teacherKey||"unknown");
+
+const form=document.getElementById("portalForm");
+const options=document.getElementById("periodOptions");
+const container=document.getElementById("periodsContainer");
+const periodDataCard=document.getElementById("periodDataCard");
+const submitBtn=document.getElementById("submitBtn");
+const status=document.getElementById("status");
+const progressBar=document.getElementById("progressBar");
+const progressLabel=document.getElementById("progressLabel");
+
+document.getElementById("submissionDate").value=new Date().toISOString().slice(0,10);
+
+if(profile){
+  document.getElementById("teacherNameDisplay").textContent=profile.name;
+  document.getElementById("teacherCourseDisplay").textContent=profile.course;
+  document.getElementById("levelDisplay").textContent=profile.level==="6-7"?"Grades 6–7":profile.level==="8"?"Grade 8":profile.level==="9-12"?"Grades 9–12":"Special schedule";
+  document.getElementById("course").value=profile.course;
+  for(let p=1;p<=profile.maxPeriods;p++){
+    options.insertAdjacentHTML("beforeend",`<label class="period-option"><input type="checkbox" value="${p}">Period ${p}</label>`);
+  }
+  restoreDraft();
+}else{
+  submitBtn.disabled=true;
+  status.className="status err";
+  status.textContent="This teacher link is not recognized. Please use the personal link sent by Jorge Ceballos.";
+}
+
+options.addEventListener("change",()=>{renderPeriods();saveDraft();updateProgress()});
+form.addEventListener("input",()=>{saveDraft();updateProgress()});
+document.getElementById("clearDraftBtn").addEventListener("click",clearDraft);
+document.getElementById("newSubmissionBtn").addEventListener("click",resetForm);
+
+function renderPeriods(){
+  const selected=[...options.querySelectorAll("input:checked")].map(x=>Number(x.value)).sort((a,b)=>a-b);
+  periodDataCard.style.display=selected.length?"block":"none";
+  const old={};
+  container.querySelectorAll(".period-card").forEach(card=>old[card.dataset.period]=readCard(card));
+  container.innerHTML="";
+  selected.forEach(p=>{
+    container.insertAdjacentHTML("beforeend",`
+    <div class="period-card" data-period="${p}">
+      <div class="period-head"><strong>Period ${p}</strong><span class="badge">Instructional period</span></div>
+      <div class="grid2">
+        <div class="field"><label>Objective / standard <span class="required">*</span></label><input class="objective" required></div>
+        <div class="field"><label>Students assessed <span class="required">*</span></label><input class="assessed" type="number" min="0" required value="0"></div>
+      </div>
+      <div class="grid5">
+        <div class="field"><label>Mastered</label><input class="mastered" type="number" min="0" value="0"></div>
+        <div class="field"><label>Met</label><input class="met" type="number" min="0" value="0"></div>
+        <div class="field"><label>Approached</label><input class="approached" type="number" min="0" value="0"></div>
+        <div class="field"><label>Did not meet</label><input class="notmet" type="number" min="0" value="0"></div>
+        <div class="field"><label>Masters + Meets + Approaches %</label><input class="percent" readonly value="0%"></div>
+      </div>
+      <div class="check"></div>
+    </div>`);
+    const card=container.lastElementChild;
+    if(old[p])writeCard(card,old[p]);
+    card.querySelectorAll("input[type=number]").forEach(i=>i.addEventListener("input",()=>validateCard(card)));
+    validateCard(card);
+  });
+}
+
+function readCard(card){
+  return{
+    objective:card.querySelector(".objective").value,
+    assessed:+card.querySelector(".assessed").value||0,
+    mastered:+card.querySelector(".mastered").value||0,
+    met:+card.querySelector(".met").value||0,
+    approached:+card.querySelector(".approached").value||0,
+    didNotMeet:+card.querySelector(".notmet").value||0
+  };
+}
+function writeCard(card,d){
+  card.querySelector(".objective").value=d.objective||"";
+  card.querySelector(".assessed").value=d.assessed||0;
+  card.querySelector(".mastered").value=d.mastered||0;
+  card.querySelector(".met").value=d.met||0;
+  card.querySelector(".approached").value=d.approached||0;
+  card.querySelector(".notmet").value=d.didNotMeet||0;
+}
+function validateCard(card){
+  const d=readCard(card),sum=d.mastered+d.met+d.approached+d.didNotMeet;
+  card.querySelector(".percent").value=d.assessed?Math.round(((d.mastered+d.met+d.approached)/d.assessed)*100)+"%":"0%";
+  const c=card.querySelector(".check");
+  if(sum===d.assessed){c.textContent="✓ Counts match students assessed.";c.style.color="#39734b"}
+  else{c.textContent=`Counts total ${sum}; students assessed is ${d.assessed}.`;c.style.color="#b94831"}
+}
+
+function updateProgress(){
+  let step=1;
+  const type=document.querySelector('input[name="submissionType"]:checked');
+  if(type&&document.getElementById("assessmentName").value.trim())step=2;
+  if(options.querySelectorAll("input:checked").length)step=3;
+  if(container.querySelector(".period-card"))step=4;
+  if(document.getElementById("misconceptions").value.trim()&&document.getElementById("outcome").value.trim()&&document.getElementById("causes").value.trim()&&document.getElementById("solutions").value.trim())step=5;
+  progressBar.style.width=(step*20)+"%";
+  progressLabel.textContent=`Step ${step} of 5`;
+}
+function getDraft(){
+  return{
+    date:document.getElementById("submissionDate").value,
+    assessmentName:document.getElementById("assessmentName").value,
+    type:document.querySelector('input[name="submissionType"]:checked')?.value||"",
+    selected:[...options.querySelectorAll("input:checked")].map(x=>x.value),
+    periods:[...container.querySelectorAll(".period-card")].map(readCard),
+    misconceptions:document.getElementById("misconceptions").value,
+    outcome:document.getElementById("outcome").value,
+    causes:document.getElementById("causes").value,
+    solutions:document.getElementById("solutions").value
+  };
+}
+let saveTimer;
+function saveDraft(){
+  if(!profile)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    localStorage.setItem(draftKey,JSON.stringify(getDraft()));
+    document.getElementById("autosaveText").textContent="Draft saved on this device.";
+  },350);
+}
+function restoreDraft(){
+  const raw=localStorage.getItem(draftKey);
+  if(!raw)return;
+  try{
+    const d=JSON.parse(raw);
+    document.getElementById("submissionDate").value=d.date||new Date().toISOString().slice(0,10);
+    document.getElementById("assessmentName").value=d.assessmentName||"";
+    if(d.type){const r=document.querySelector(`input[name="submissionType"][value="${d.type}"]`);if(r)r.checked=true}
+    (d.selected||[]).forEach(v=>{const cb=options.querySelector(`input[value="${v}"]`);if(cb)cb.checked=true});
+    renderPeriods();
+    [...container.querySelectorAll(".period-card")].forEach((card,i)=>{if(d.periods?.[i])writeCard(card,d.periods[i]);validateCard(card)});
+    ["misconceptions","outcome","causes","solutions"].forEach(id=>document.getElementById(id).value=d[id]||"");
+    updateProgress();
+  }catch(e){}
+}
+function clearDraft(){
+  localStorage.removeItem(draftKey);
+  resetForm();
+}
+function resetForm(){
+  form.reset();
+  document.getElementById("submissionDate").value=new Date().toISOString().slice(0,10);
+  document.getElementById("course").value=profile?.course||"";
+  options.querySelectorAll("input").forEach(x=>x.checked=false);
+  container.innerHTML="";
+  periodDataCard.style.display="none";
+  form.style.display="block";
+  document.getElementById("identityCard").style.display="block";
+  document.getElementById("successCard").style.display="none";
+  status.className="status";
+  updateProgress();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  status.className="status";
+  const cards=[...container.querySelectorAll(".period-card")];
+  if(!profile||!cards.length){status.className="status err";status.textContent="Select at least one instructional period.";return}
+  const periods=cards.map(card=>({period:Number(card.dataset.period),...readCard(card)}));
+  const mismatch=periods.find(p=>p.assessed!==p.mastered+p.met+p.approached+p.didNotMeet);
+  if(mismatch){status.className="status err";status.textContent=`Correct the counts for Period ${mismatch.period} before submitting.`;return}
+  const totals=periods.reduce((a,p)=>({assessed:a.assessed+p.assessed,mastered:a.mastered+p.mastered,met:a.met+p.met,approached:a.approached+p.approached,didNotMeet:a.didNotMeet+p.didNotMeet}),{assessed:0,mastered:0,met:0,approached:0,didNotMeet:0});
+  const record={
+    teacherId,teacherKey,teacherName:profile.name,course:profile.course,level:profile.level,
+    submissionDate:document.getElementById("submissionDate").value,
+    submissionType:document.querySelector('input[name="submissionType"]:checked').value,
+    assessmentName:document.getElementById("assessmentName").value.trim(),
+    periods,
+    misconceptions:document.getElementById("misconceptions").value.trim(),
+    outcome:document.getElementById("outcome").value.trim(),
+    causes:document.getElementById("causes").value.trim(),
+    solutions:document.getElementById("solutions").value.trim(),
+    totals:{...totals,mastersMeetsApproachesPercent:totals.assessed?Math.round(((totals.mastered+totals.met+totals.approached)/totals.assessed)*100):0},
+    createdAt:serverTimestamp(),source:"personal-teacher-portal-v3.0"
+  };
+  submitBtn.disabled=true;submitBtn.textContent="Submitting…";
+  try{
+    const ref=await addDoc(collection(db,"instructionalSubmissions"),record);
+    localStorage.removeItem(draftKey);
+    form.style.display="none";
+    document.getElementById("identityCard").style.display="none";
+    document.getElementById("successCard").style.display="block";
+    document.getElementById("confirmationText").textContent=`Confirmation: ${ref.id.slice(0,8).toUpperCase()}`;
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(err){
+    console.error(err);
+    status.className="status err";
+    status.textContent="Firebase rejected the submission. Confirm that the Firestore rule is published and try again.";
+  }finally{
+    submitBtn.disabled=false;submitBtn.textContent="Submit instructional data";
+  }
+});
+updateProgress();
+</script>
+</body>
+</html>
