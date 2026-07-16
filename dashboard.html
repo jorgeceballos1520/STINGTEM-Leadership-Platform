@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IDEA Spears Instructional Leadership Platform v2.8</title>
+<title>IDEA Spears Instructional Leadership Platform v2.7</title>
 <style>
 :root{--navy:#17283c;--navy2:#253f5b;--paper:#f5f3ed;--card:#fff;--line:#dedbd1;--muted:#667487;--blue:#1677b8;--gold:#c9972d;--goldbg:#fbf0d8;--red:#b94831;--redbg:#f9e4dd;--green:#39734b;--greenbg:#e3f0e6;--purple:#654ea3;--purplebg:#eee9fb;--shadow:0 7px 22px rgba(24,40,60,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -221,8 +221,8 @@ function fmt(d){return d?new Date(d+"T00:00:00").toLocaleDateString("en-US",{mon
 function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function teacher(id){return TEACHERS.find(t=>t.id===id)||{name:"",subject:""}}
 function obsFor(id){return state.observations.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
-function etFor(id){return state.exitTickets.filter(o=>o.teacherId===id).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))}
-function examsFor(id){return state.exams.filter(o=>o.teacherId===id).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))}
+function etFor(id){return state.exitTickets.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
+function examsFor(id){return state.exams.filter(o=>o.teacherId===id).sort((a,b)=>b.date.localeCompare(a.date))}
 function goalsFor(id){return state.goals.filter(g=>g.teacherId===id).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""))}
 function activeFor(id){return obsFor(id).filter(o=>!["Mastered","Sustaining"].includes(o.status))}
 function totalET(x){return (+x.master||0)+(+x.meet||0)+(+x.approach||0)+(+x.notMeet||0)}
@@ -484,42 +484,25 @@ function overallETForTeacher(id){
   if(!rows.length)return null;
 
   const latest=rows[0];
-  const sourceId=latest.sourceId||"";
-  const sameSubmission=sourceId
-    ? rows.filter(e=>e.sourceId===sourceId)
-    : rows.filter(e=>
-        String(e.date||"")===String(latest.date||"") &&
-        String(e.assessmentName||"")===String(latest.assessmentName||"")
-      );
+  const latestKey=latest.sourceId||`${latest.date||""}|${latest.assessmentName||""}`;
 
-  // Cloud submissions place the complete original periods array on every mapped row.
-  // Use it only once so periods are combined accurately without duplication.
-  const sourcePeriods=Array.isArray(latest.periods)&&latest.periods.length
-    ? latest.periods
-    : sameSubmission.map(e=>({
-        period:e.period,
-        assessed:totalET(e),
-        mastered:Number(e.master)||0,
-        met:Number(e.meet)||0,
-        approached:Number(e.approach)||0,
-        didNotMeet:Number(e.notMeet)||0,
-        objective:e.objective||""
-      }));
+  const sameSubmission=rows.filter(e=>{
+    const key=e.sourceId||`${e.date||""}|${e.assessmentName||""}`;
+    return key===latestKey;
+  });
 
-  const totals=sourcePeriods.reduce((a,p)=>({
-    assessed:a.assessed+(Number(p.assessed)||0),
-    master:a.master+(Number(p.mastered)||0),
-    meet:a.meet+(Number(p.met)||0),
-    approach:a.approach+(Number(p.approached)||0),
-    notMeet:a.notMeet+(Number(p.didNotMeet)||0)
+  const totals=sameSubmission.reduce((a,e)=>({
+    assessed:a.assessed+totalET(e),
+    master:a.master+(+e.master||0),
+    meet:a.meet+(+e.meet||0),
+    approach:a.approach+(+e.approach||0),
+    notMeet:a.notMeet+(+e.notMeet||0)
   }),{assessed:0,master:0,meet:0,approach:0,notMeet:0});
 
   return {
-    sourceId,
-    date:String(latest.date||""),
+    date:latest.date||"",
     assessmentName:latest.assessmentName||"Exit Ticket",
-    periods:sourcePeriods.length,
-    sourcePeriods,
+    periods:sameSubmission.length,
     ...totals,
     approachesPlus:totals.assessed?Math.round((totals.master+totals.meet+totals.approach)/totals.assessed*100):0,
     meetsPlus:totals.assessed?Math.round((totals.master+totals.meet)/totals.assessed*100):0,
@@ -534,36 +517,26 @@ function groupedETTrend(id){
   const groups={};
 
   rows.forEach(e=>{
-    const key=e.sourceId||`${String(e.date||"")}|${String(e.assessmentName||"")}`;
+    const key=e.sourceId||`${e.date||""}|${e.assessmentName||""}`;
     (groups[key]||(groups[key]=[])).push(e);
   });
 
   return Object.values(groups).map(records=>{
-    const first=records[0];
-    const periods=Array.isArray(first.periods)&&first.periods.length
-      ? first.periods
-      : records.map(e=>({
-          assessed:totalET(e),
-          mastered:Number(e.master)||0,
-          met:Number(e.meet)||0,
-          approached:Number(e.approach)||0
-        }));
-
-    const totals=periods.reduce((a,p)=>({
-      assessed:a.assessed+(Number(p.assessed)||0),
-      master:a.master+(Number(p.mastered)||0),
-      meet:a.meet+(Number(p.met)||0),
-      approach:a.approach+(Number(p.approached)||0)
+    const totals=records.reduce((a,e)=>({
+      assessed:a.assessed+totalET(e),
+      master:a.master+(+e.master||0),
+      meet:a.meet+(+e.meet||0),
+      approach:a.approach+(+e.approach||0)
     }),{assessed:0,master:0,meet:0,approach:0});
 
     return {
-      date:String(first.date||""),
-      label:first.assessmentName||"Exit Ticket",
+      date:records[0].date||"",
+      label:records[0].assessmentName||"Exit Ticket",
       value:totals.assessed
         ? Math.round((totals.master+totals.meet+totals.approach)/totals.assessed*100)
         : 0
     };
-  }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  }).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 }
 
 function groupedExamTrend(id){
@@ -571,35 +544,17 @@ function groupedExamTrend(id){
   const groups={};
 
   rows.forEach(e=>{
-    const key=e.sourceId||`${String(e.date||"")}|${String(e.examName||"")}`;
+    const key=e.sourceId||`${e.date||""}|${e.examName||""}`;
     (groups[key]||(groups[key]=[])).push(e);
   });
 
-  return Object.values(groups).map(records=>{
-    const first=records[0];
-    const periods=Array.isArray(first.periods)&&first.periods.length
-      ? first.periods
-      : null;
-
-    let value=0;
-    if(periods){
-      const totals=periods.reduce((a,p)=>({
-        assessed:a.assessed+(Number(p.assessed)||0),
-        success:a.success+(Number(p.mastered)||0)+(Number(p.met)||0)+(Number(p.approached)||0)
-      }),{assessed:0,success:0});
-      value=totals.assessed?Math.round(totals.success/totals.assessed*100):0;
-    }else{
-      value=records.length
-        ? Math.round(records.reduce((sum,e)=>sum+(Number(e.proficiency)||0),0)/records.length)
-        : 0;
-    }
-
-    return {
-      date:String(first.date||""),
-      label:first.examName||"Exam",
-      value
-    };
-  }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  return Object.values(groups).map(records=>({
+    date:records[0].date||"",
+    label:records[0].examName||"Exam",
+    value:records.length
+      ? Math.round(records.reduce((sum,e)=>sum+(Number(e.proficiency)||0),0)/records.length)
+      : 0
+  })).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 }
 
 function goalTrend(id){
@@ -679,8 +634,8 @@ function teacherProgressPage(id){
   const ratedObs=os.filter(o=>o.rating&&o.rating!=="Not Rated");
 
   const latestCloud=[...state.exitTickets,...state.exams]
-    .filter(x=>x&&x.teacherId===id&&x.cloudSubmission&&Array.isArray(x.periods)&&x.periods.length)
-    .sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0]||null;
+    .filter(x=>x.teacherId===id && x.cloudSubmission && Array.isArray(x.periods))
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||""))[0];
 
   return `<div class="page-head no-print"><div><button class="btn" id="backProgress">&larr; Progress Reports</button><h2 class="serif" style="margin-top:12px">${esc(t.name)}'s Progress Report</h2><div class="sub">${esc(t.subject)}</div></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
@@ -827,15 +782,7 @@ function principal(){
 function bind(){
   document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{view={screen:b.dataset.view,teacherId:null};render();});
   document.querySelectorAll(".teacher-card").forEach(c=>c.onclick=()=>{view={screen:"teacher",teacherId:c.dataset.id};render();});
-  document.querySelectorAll(".progress-card").forEach(c=>c.onclick=()=>{
-    try{
-      view={screen:"progressTeacher",teacherId:c.dataset.id};
-      render();
-    }catch(error){
-      console.error("Progress Report error:",error);
-      alert("The Progress Report could not open. Please refresh the dashboard and try again.");
-    }
-  });
+  document.querySelectorAll(".progress-card").forEach(c=>c.onclick=()=>{view={screen:"progressTeacher",teacherId:c.dataset.id};render();});
   let x=document.getElementById("back"); if(x)x.onclick=()=>{view={screen:"dashboard",teacherId:null};render();};
   x=document.getElementById("backProgress"); if(x)x.onclick=()=>{view={screen:"progress",teacherId:null};render();};
   x=document.getElementById("newObs"); if(x)x.onclick=()=>openObs(view.teacherId);
