@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STING'EM Leadership Platform</title>
+<link rel="icon" type="image/png" href="images/logo.png">
 <style>
 :root{
 --navy:#13263a;
+--navy2:#214564;
 --gold:#c9a227;
 --paper:#f4f1ea;
 --card:#fff;
@@ -20,18 +22,31 @@ background:#eef2f6;
 color:var(--navy);
 }
 header{
-background:linear-gradient(135deg,#13263a,#214564);
+background:linear-gradient(135deg,var(--navy),var(--navy2));
 color:white;
-padding:30px;
+padding:28px 20px 32px;
 text-align:center;
 }
-header img{
-max-width:120px;
-border-radius:12px;
-margin-bottom:15px;
+.logo{
+display:block;
+width:210px;
+max-width:72vw;
+height:auto;
+margin:0 auto 18px;
+filter:drop-shadow(0 10px 18px rgba(0,0,0,.22));
 }
-header h1{margin:0;font-size:2.3rem}
-header h2{margin:.3rem 0;color:#f0d97b;font-weight:600}
+header h1{
+margin:0;
+font-size:2.3rem;
+}
+header h2{
+margin:.35rem 0;
+color:#f0d97b;
+font-weight:600;
+}
+header p{
+margin:.75rem 0 0;
+}
 .container{
 max-width:1200px;
 margin:auto;
@@ -54,6 +69,7 @@ transition:.2s;
 }
 .card:hover{
 transform:translateY(-4px);
+box-shadow:0 12px 28px rgba(0,0,0,.12);
 }
 .card h3{
 margin-top:0;
@@ -90,17 +106,27 @@ padding:15px;
 border-radius:10px;
 text-align:center;
 }
+.stat h3{
+margin:0 0 6px;
+font-size:1.7rem;
+color:var(--navy);
+}
 footer{
 text-align:center;
 padding:30px;
 color:#666;
+}
+@media(max-width:600px){
+header h1{font-size:1.8rem}
+header h2{font-size:1.2rem}
+.logo{width:170px}
 }
 </style>
 </head>
 <body>
 
 <header>
-<img src="background-cover.png" alt="IDEA Spears">
+<img class="logo" src="images/logo.png" alt="STING'EM Leadership Platform logo">
 <h1>STING'EM Leadership Platform</h1>
 <h2>IDEA Spears College Prep</h2>
 <p><strong>Embrace the Sting</strong></p>
