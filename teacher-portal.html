@@ -3,347 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STING'EM Leadership Platform | Teacher Portal</title>
+<title>Student Behavior Concern Form v2.1 | IDEA Spears</title>
 <style>
-:root{
-  --navy:#13263a;
-  --navy2:#1d3955;
-  --black:#111111;
-  --paper:#f5f2ea;
-  --card:#ffffff;
-  --line:#ddd8cf;
-  --muted:#687789;
-  --blue:#1e78b4;
-  --green:#39734b;
-  --red:#b94831;
-  --gold:#c9a227;
-  --gold2:#e3c24f;
-  --shadow:0 12px 32px rgba(19,38,58,.12)
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  background:
-    linear-gradient(rgba(245,242,234,.96),rgba(245,242,234,.96)),
-    radial-gradient(circle at top right,rgba(201,162,39,.18),transparent 34%);
-  color:var(--navy);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
-}
-.app{max-width:1100px;margin:auto;padding:18px 16px 64px}
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:14px;
-  margin-bottom:14px;
-  padding:12px 14px;
-  border-radius:14px;
-  background:var(--black);
-  color:#fff;
-  box-shadow:var(--shadow)
-}
-.brand-wrap{display:flex;align-items:center;gap:12px;min-width:0}
-.brand-logo{
-  width:290px;
-  max-width:48vw;
-  height:auto;
-  object-fit:contain;
-  display:block
-}
-.brand{font-weight:900;letter-spacing:.02em;line-height:1.05}
-.brand .em{color:var(--gold2)}
-.brand-sub{display:block;font-size:11px;color:#d8d8d8;margin-top:4px;font-weight:600}
-.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.home-link{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:9px 12px;
-  border-radius:10px;
-  background:var(--gold);
-  color:#111;
-  text-decoration:none;
-  font-size:13px;
-  font-weight:900
-}
-.home-link:hover{background:var(--gold2)}
-.version{font-size:12px;color:#d8d8d8;white-space:nowrap}
-.hero{
-  position:relative;
-  overflow:hidden;
-  background:linear-gradient(135deg,var(--navy),var(--navy2));
-  color:#fff;
-  border-radius:20px;
-  padding:28px;
-  box-shadow:var(--shadow);
-  margin-bottom:16px
-}
-.hero:after{
-  content:"";
-  position:absolute;
-  width:220px;
-  height:220px;
-  right:-80px;
-  top:-95px;
-  border-radius:50%;
-  background:rgba(201,162,39,.18)
-}
-.hero h1{font-family:Georgia,serif;margin:0 0 7px;font-size:32px;position:relative;z-index:1}
-.hero p{margin:0;color:#dbe4ec;position:relative;z-index:1}
-.portal-kicker{
-  display:inline-block;
-  margin-bottom:10px;
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(201,162,39,.18);
-  color:#f3d875;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  position:relative;
-  z-index:1
-}
-.progress-wrap{margin-top:20px;position:relative;z-index:1}
-.progress-track{height:8px;background:rgba(255,255,255,.22);border-radius:99px;overflow:hidden}
-.progress-bar{height:100%;width:20%;background:linear-gradient(90deg,#fff,var(--gold2));border-radius:99px;transition:.25s}
-.progress-label{font-size:12px;margin-top:7px;color:#dbe4ec}
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:20px;
-  box-shadow:var(--shadow);
-  margin-bottom:15px
-}
-.identity-card{border-top:5px solid var(--gold)}
-.step{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  background:#e8eff6;
-  color:var(--blue);
-  font-weight:900;
-  margin-right:8px
-}
-h2{font-family:Georgia,serif;font-size:22px;margin:0 0 14px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.field{margin-bottom:13px}
-.field label{display:block;font-size:12px;font-weight:800;color:#566373;margin-bottom:6px}
-input,select,textarea{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:11px;
-  background:#fff;
-  color:var(--navy);
-  font:inherit
-}
-input:focus,select:focus,textarea:focus{outline:2px solid #b9d8ee;border-color:var(--blue)}
-input[readonly]{background:#f4f5f6;color:#4e5b68}
-textarea{min-height:92px;resize:vertical}
-.teacher-box{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.teacher-name{font-size:25px;font-weight:900}
-.teacher-course{color:var(--muted);font-size:14px;margin-top:3px}
-.teacher-label{
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:5px
-}
-.badge{font-size:11px;background:#e7eff8;color:var(--blue);padding:6px 10px;border-radius:99px;font-weight:800}
-.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.type-card{
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:13px;
-  cursor:pointer;
-  background:#fbfaf7;
-  font-weight:700
-}
-.type-card input{width:auto;margin-right:7px}
-.type-card:has(input:checked){border-color:var(--blue);background:#eef7fc;box-shadow:0 0 0 2px rgba(30,120,180,.08)}
-.period-options{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.period-option{
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:10px;
-  text-align:center;
-  background:#faf9f5;
-  cursor:pointer;
-  font-weight:700
-}
-.period-option input{width:auto;margin-right:5px}
-.period-option:has(input:checked){border-color:var(--blue);background:#eef7fc}
-.period-card{border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:12px;padding:15px;margin:12px 0;background:#fcfcfa}
-.period-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.hint{font-size:11px;color:var(--muted);line-height:1.45}
-.check{font-size:11px;margin-top:5px;font-weight:700}
-.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-.btn{border:0;border-radius:10px;padding:12px 17px;font-weight:900;cursor:pointer;transition:.18s}
-.btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--navy);color:#fff}
-.btn-secondary{background:#eef1f4;color:var(--navy)}
-.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-.status{display:none;margin-top:12px;padding:12px;border-radius:10px}
-.status.ok{display:block;background:#e3f0e6;color:#245d35}
-.status.err{display:block;background:#f9e4dd;color:#7a2c1b}
-.required{color:var(--red)}
-.autosave{font-size:11px;color:var(--muted);margin-top:8px}
-.success{display:none;text-align:center;padding:34px}
-.success h2{font-size:28px}
-.success .checkmark{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:76px;
-  height:76px;
-  border-radius:50%;
-  background:#e3f0e6;
-  color:var(--green);
-  font-size:48px
-}
-.site-footer{
-  margin-top:24px;
-  padding:18px 12px 0;
-  text-align:center;
-  color:var(--muted);
-  font-size:12px
-}
-.site-footer strong{color:var(--navy)}
-.site-footer .motto{color:#9a7614;font-weight:900;margin-top:4px}
-@media(max-width:780px){
-  .grid2,.grid5,.period-options,.type-grid{grid-template-columns:1fr}
-  .teacher-box{display:block}
-  .teacher-box .badge{display:inline-block;margin-top:12px}
-  .hero h1{font-size:26px}
-  .topbar{align-items:flex-start}
-  .brand-logo{width:230px;max-width:62vw;height:auto}
-  .version{display:none}
-}
-@media(max-width:520px){
-  .topbar{flex-direction:column}
-  .top-actions{width:100%;justify-content:space-between}
-  .home-link{width:100%;justify-content:center}
-  .hero{padding:22px}
-}
+:root{--navy:#17283c;--paper:#f5f3ed;--card:#fff;--line:#dedbd1;--muted:#667487;--green:#39734b;--red:#b94831;--shadow:0 7px 22px rgba(24,40,60,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--navy);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:980px;margin:auto;padding:24px 16px 60px}.hero{background:var(--navy);color:#fff;border-radius:16px;padding:24px;margin-bottom:15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:19px;box-shadow:var(--shadow);margin-bottom:14px}
+h2{font-family:Georgia,serif;margin:0 0 12px}h3{margin:0 0 13px;font-size:17px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.field{margin-bottom:12px}label{display:block;font-size:12px;font-weight:800;color:#566373;margin-bottom:5px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}textarea{min-height:96px;resize:vertical}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.check{display:flex;gap:7px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:9px;background:#faf9f5;font-size:12px}.check input{width:auto;margin-top:2px}
+.radios{display:flex;gap:15px;flex-wrap:wrap}.radio{display:flex;gap:6px;align-items:center;font-size:13px}.radio input{width:auto}
+.hint{font-size:11.5px;color:var(--muted);margin-top:5px}button{border:0;border-radius:8px;background:var(--navy);color:#fff;padding:11px 16px;font-weight:800;cursor:pointer}
+.message{display:none;padding:11px;border-radius:8px;margin-top:12px}.message.show{display:block}.ok{background:#e3f0e6;color:#245d35}.err{background:#f9e4dd;color:#78311f}
+@media(max-width:760px){.grid2,.grid3,.grid4,.checks{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app">
-<div class="topbar">
-  <div class="brand-wrap">
-    <img class="brand-logo" src="images/logo.png" alt="STING'EM Leadership Platform">
+<div class="wrap">
+<section class="hero">
+  <h1 style="margin:0;font-family:Georgia,serif">Student Behavior Concern Form</h1>
+  <p style="margin:5px 0 0;color:#dce6ef">IDEA Spears · Grade <span id="gradeHeading"></span></p>
+</section>
 
+<section class="card" id="invalidCard" style="display:none">
+  <h3>Link not recognized</h3>
+  <p>Please use the unique grade-level link provided by Jorge Ceballos.</p>
+</section>
+
+<form id="requestForm">
+<section class="card">
+<h2>Student Information</h2>
+<div class="grid4">
+  <div class="field"><label>Student Name *</label><input id="studentName" required></div>
+  <div class="field"><label>Student ID *</label><input id="studentId" required></div>
+  <div class="field"><label>Grade *</label><input id="gradeDisplay" disabled></div>
+  <div class="field"><label>Homeroom / Advisory</label><input id="homeroom"></div>
+</div>
+<div class="grid4">
+  <div class="field"><label>Teacher Completing Form *</label><input id="submittedByName" required></div>
+  <div class="field"><label>Date *</label><input id="incidentDate" type="date" required></div>
+  <div class="field"><label>Time *</label><input id="incidentTime" type="time" required></div>
+  <div class="field"><label>Location *</label><input id="location" required></div>
+</div>
+
+<h3>Student Services</h3>
+<div class="checks">
+  <label class="check"><input type="checkbox" name="services" value="SPED (IEP)">SPED (IEP)</label><label class="check"><input type="checkbox" name="services" value="504">504</label><label class="check"><input type="checkbox" name="services" value="Emergent Bilingual (EB)">Emergent Bilingual (EB)</label><label class="check"><input type="checkbox" name="services" value="Dyslexia">Dyslexia</label><label class="check"><input type="checkbox" name="services" value="Gifted & Talented">Gifted & Talented</label><label class="check"><input type="checkbox" name="services" value="MTSS / RTI">MTSS / RTI</label><label class="check"><input type="checkbox" name="services" value="Foster Care">Foster Care</label><label class="check"><input type="checkbox" name="services" value="McKinney-Vento">McKinney-Vento</label>
+</div>
+</section>
+
+<section class="card">
+<h2>Incident Information</h2>
+<div class="grid2">
+  <div class="field"><label>Behavior Category *</label>
+    <select id="behaviorCategory" required>
+      <option value="">Select</option>
+      <option>Disruption</option><option>Defiance</option><option>Insubordination</option><option>Inappropriate Language</option><option>Fighting</option><option>Aggression</option><option>Bullying</option><option>Harassment</option><option>Vaping</option><option>Cell Phone</option><option>Dress Code</option><option>Academic Dishonesty</option><option>Skipping Class</option><option>Tardy</option><option>Property Damage</option><option>Theft</option><option>Other</option>
+    </select>
   </div>
-  <div class="top-actions">
-    <a class="home-link" href="index.html" aria-label="Return to STING'EM Home">🏠 Home</a>
-    <div class="version">Teacher Portal v4.1</div>
+  <div class="field"><label>Severity *</label>
+    <div class="radios">
+      <label class="radio"><input type="radio" name="severity" value="Minor" required>Minor</label>
+      <label class="radio"><input type="radio" name="severity" value="Moderate">Moderate</label>
+      <label class="radio"><input type="radio" name="severity" value="Major">Major</label>
+    </div>
   </div>
 </div>
 
-<section class="hero">
-  <div class="portal-kicker">Teacher Portal</div>
-  <h1>Instructional Data Submission</h1>
-  <p>Submit Exit Ticket or assessment data for selected instructional periods.</p>
-  <div class="progress-wrap">
-    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-    <div class="progress-label" id="progressLabel">Step 1 of 5</div>
-  </div>
+<div class="field">
+  <label>Detailed Description — What happened? *</label>
+  <textarea id="incidentDescription" required placeholder="Document facts only. State what the student actually did or said. Do not include opinions, assumptions, or conclusions."></textarea>
+  <div class="hint">Facts only · Observable actions · Exact language when relevant · No opinions or assumptions</div>
+</div>
 </section>
 
-<section class="card identity-card" id="identityCard">
-  <div class="field" id="leadershipSelectorWrap" style="display:none">
-    <label for="leadershipTeacherSelect">Submitting on behalf of <span class="required">*</span></label>
-    <select id="leadershipTeacherSelect">
-      <option value="">Select a teacher</option>
+<section class="card">
+<h2>Staff Actions Taken</h2>
+<div class="checks">
+  <label class="check"><input type="checkbox" name="staffActions" value="Verbal Redirection">Verbal Redirection</label><label class="check"><input type="checkbox" name="staffActions" value="Warning">Warning</label><label class="check"><input type="checkbox" name="staffActions" value="Seat Change">Seat Change</label><label class="check"><input type="checkbox" name="staffActions" value="Conference">Conference</label><label class="check"><input type="checkbox" name="staffActions" value="Parent Contact">Parent Contact</label><label class="check"><input type="checkbox" name="staffActions" value="Buddy Room">Buddy Room</label><label class="check"><input type="checkbox" name="staffActions" value="Restorative Conversation">Restorative Conversation</label><label class="check"><input type="checkbox" name="staffActions" value="Reflection Sheet">Reflection Sheet</label><label class="check"><input type="checkbox" name="staffActions" value="Office Referral">Office Referral</label><label class="check"><input type="checkbox" name="staffActions" value="Nurse">Nurse</label><label class="check"><input type="checkbox" name="staffActions" value="Counselor">Counselor</label><label class="check"><input type="checkbox" name="staffActions" value="Other">Other</label>
+</div>
+
+<div class="field" style="margin-top:14px"><label>Student Response *</label>
+<select id="studentResponse" required>
+  <option value="">Select</option>
+  <option>Accepted correction</option><option>Continued behavior</option><option>Escalated</option><option>Refused directions</option><option>Apologized</option><option>Left classroom</option><option>Other</option>
+</select></div>
+
+<div class="grid2">
+  <div class="field"><label>Student Witnesses</label><textarea id="studentWitnesses" placeholder="Names or IDs, when appropriate"></textarea></div>
+  <div class="field"><label>Staff Witnesses</label><textarea id="staffWitnesses"></textarea></div>
+</div>
+
+<h3>Evidence</h3>
+<div class="checks">
+  <label class="check"><input type="checkbox" name="evidence" value="Video">Video</label><label class="check"><input type="checkbox" name="evidence" value="Photo">Photo</label><label class="check"><input type="checkbox" name="evidence" value="Written Statement">Written Statement</label><label class="check"><input type="checkbox" name="evidence" value="Physical Evidence">Physical Evidence</label><label class="check"><input type="checkbox" name="evidence" value="None">None</label>
+</div>
+</section>
+
+<section class="card">
+<h2>Parent Contact</h2>
+<div class="field"><label>Was a parent or guardian contacted? *</label>
+<div class="radios">
+  <label class="radio"><input type="radio" name="parentContacted" value="Yes" required>Yes</label>
+  <label class="radio"><input type="radio" name="parentContacted" value="No">No</label>
+</div></div>
+
+<div class="grid4">
+  <div class="field"><label>Who contacted?</label><input id="parentContactBy"></div>
+  <div class="field"><label>Date</label><input id="contactDate" type="date"></div>
+  <div class="field"><label>Time</label><input id="contactTime" type="time"></div>
+  <div class="field"><label>Method</label>
+    <select id="contactMethod"><option value="">Select</option><option>Phone</option><option>Email</option><option>Text</option><option>In Person</option></select>
+  </div>
+</div>
+<div class="field"><label>Summary of Conversation</label><textarea id="parentContactNotes"></textarea></div>
+</section>
+
+<section class="card">
+<h2>Previous Classroom Interventions</h2>
+<div class="checks">
+  <label class="check"><input type="checkbox" name="previousInterventions" value="Multiple warnings">Multiple warnings</label><label class="check"><input type="checkbox" name="previousInterventions" value="Parent contacted previously">Parent contacted previously</label><label class="check"><input type="checkbox" name="previousInterventions" value="Seating change">Seating change</label><label class="check"><input type="checkbox" name="previousInterventions" value="Behavior contract">Behavior contract</label><label class="check"><input type="checkbox" name="previousInterventions" value="Restorative conference">Restorative conference</label><label class="check"><input type="checkbox" name="previousInterventions" value="Detention">Detention</label><label class="check"><input type="checkbox" name="previousInterventions" value="Lunch detention">Lunch detention</label><label class="check"><input type="checkbox" name="previousInterventions" value="Other">Other</label>
+</div>
+
+<div class="grid3" style="margin-top:14px">
+  <div class="field"><label>Possible Trigger</label>
+    <select id="possibleTrigger"><option value="">Optional</option>
+      <option>Peer conflict</option><option>Academic frustration</option><option>Transition</option><option>Unstructured time</option><option>Emotional</option><option>Unknown</option><option>Other</option>
     </select>
-    <div class="hint" style="margin-top:6px">Leadership access only. The submission will be saved under the selected teacher's unique ID.</div>
   </div>
-  <div class="teacher-box">
-    <div>
-      <div class="teacher-label">Teacher profile</div>
-      <div class="teacher-name" id="teacherNameDisplay">Select a teacher</div>
-      <div class="teacher-course" id="teacherCourseDisplay">Choose the teacher for this submission.</div>
-    </div>
-    <div class="badge" id="levelDisplay">Leadership access</div>
+  <div class="field"><label>Did the behavior interrupt instruction? *</label>
+    <select id="interruptedInstruction" required><option value="">Select</option><option>Yes</option><option>No</option></select>
   </div>
-</section>
+  <div class="field"><label>Approximate minutes</label><input id="minutesInterrupted" type="number" min="0"></div>
+</div>
 
-<form id="portalForm">
-<section class="card">
-  <h2><span class="step">1</span>Submission information</h2>
-  <div class="grid2">
-    <div class="field"><label>Date <span class="required">*</span></label><input id="submissionDate" type="date" required></div>
-    <div class="field"><label>Assessment or activity name <span class="required">*</span></label><input id="assessmentName" required placeholder="Example: ET 8/14 or Unit 2 Exam"></div>
-  </div>
-  <div class="field">
-    <label>TEK # <span class="required">*</span></label>
-    <input id="tekNumber" required placeholder="Example: 6.3D, 7.4A, or A.5B">
-  </div>
-  <div class="field">
-    <label>Submission type <span class="required">*</span></label>
-    <div class="type-grid">
-      <label class="type-card"><input type="radio" name="submissionType" value="Exit Ticket" required>Exit Ticket</label>
-      <label class="type-card"><input type="radio" name="submissionType" value="Exam/Assessment">Exam / Assessment</label>
-    </div>
-  </div>
-  <div class="field"><label>Course / subject</label><input id="course" readonly></div>
+<div class="field"><label>Others Affected *</label>
+<select id="othersAffected" required>
+  <option value="">Select</option>
+  <option>Individual student</option><option>Small group</option><option>Entire class</option><option>Staff member</option>
+</select></div>
 </section>
 
 <section class="card">
-  <h2><span class="step">2</span>Select instructional periods</h2>
-  <div class="hint">Conference and academic block should remain unselected unless instructional data is being reported for them.</div>
-  <div class="period-options" id="periodOptions" style="margin-top:12px"></div>
-</section>
-
-<section class="card" id="periodDataCard" style="display:none">
-  <h2><span class="step">3</span>Period data</h2>
-  <div id="periodsContainer"></div>
-</section>
-
-<section class="card">
-  <h2><span class="step">4</span>Instructional analysis</h2>
-  <div class="field"><label>Misconceptions <span class="required">*</span></label><textarea id="misconceptions" required placeholder="What specific misunderstandings or errors did students demonstrate?"></textarea></div>
-  <div class="field"><label>Outcome <span class="required">*</span></label><textarea id="outcome" required placeholder="What did the data show about what students learned and did not learn?"></textarea></div>
-  <div class="field"><label>Causes <span class="required">*</span></label><textarea id="causes" required placeholder="What do you believe contributed to these outcomes?"></textarea></div>
-  <div class="field"><label>Solutions <span class="required">*</span></label><textarea id="solutions" required placeholder="What instructional adjustments will you make?"></textarea></div>
-  <div class="autosave" id="autosaveText">Draft saves automatically on this device.</div>
-</section>
-
-<section class="card" id="submitCard">
-  <h2><span class="step">5</span>Review and submit</h2>
-  <div class="actions">
-    <button class="btn btn-secondary" id="clearDraftBtn" type="button">Clear saved draft</button>
-    <button class="btn btn-primary" id="submitBtn" type="submit">Submit instructional data</button>
-  </div>
-  <div id="status" class="status"></div>
+<h2>Teacher Recommendation</h2>
+<div class="field"><label>Recommended Next Step *</label>
+<select id="suggestedAction" required>
+  <option value="">Select</option>
+  <option>Documentation only</option><option>Parent Conference</option><option>Restorative Practice</option><option>Lunch Detention</option><option>After School Detention</option><option>Behavior Contract</option><option>Counselor</option><option>Administrator Follow-up</option><option>ISS</option><option>OSS</option>
+</select></div>
+<div class="field"><label>Additional Notes</label><textarea id="additionalNotes"></textarea></div>
+<div style="display:flex;justify-content:flex-end"><button type="submit" id="submitBtn">Submit Behavior Concern</button></div>
+<div id="message" class="message"></div>
 </section>
 </form>
-
-<section class="card success" id="successCard">
-  <div class="checkmark">✓</div>
-  <h2>Submission received</h2>
-  <p id="confirmationText"></p>
-  <button class="btn btn-primary" id="newSubmissionBtn">Start another submission</button>
-</section>
-<footer class="site-footer">
-  <strong>IDEA Spears College Prep</strong>
-  <div class="motto">Embrace the Sting</div>
-  <div>STING'EM Leadership Platform • Teacher Portal v4.1</div>
-</footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+
 const firebaseConfig={
   apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
   authDomain:"idea-spears.firebaseapp.com",
@@ -354,310 +174,103 @@ const firebaseConfig={
   measurementId:"G-0SCW3PVT1D"
 };
 
-const TEACHERS_BY_ID={
-  MTH601:{legacyKey:"chow",name:"T. Chow",course:"6th Math",level:"6-7",maxPeriods:6},
-  MTH701:{legacyKey:"emenonyu",name:"A. Emenonyu",course:"7th Math",level:"6-7",maxPeriods:6},
-  MTH801:{legacyKey:"raybon",name:"R. Raybon",course:"8th Math",level:"8",maxPeriods:7},
-  GEO901:{legacyKey:"naves",name:"G. Naves",course:"Geometry",level:"9-12",maxPeriods:7},
-  ALG101:{legacyKey:"conkleton",name:"L. Conkleton",course:"Algebra I & Algebra II",level:"9-12",maxPeriods:7},
-  PRECAL1:{legacyKey:"vargas",name:"Vargas",course:"Pre-Calculus",level:"9-12",maxPeriods:7},
-  APSPAN1:{legacyKey:"mosqueda",name:"L. Mosqueda",course:"AP Spanish",level:"9-12",maxPeriods:7},
-  PE001:{legacyKey:"quiroz",name:"R. Quiroz",course:"PE",level:"special",maxPeriods:7},
-  PE002:{legacyKey:"waddell",name:"K. Waddell",course:"PE",level:"special",maxPeriods:7},
-  SPAN001:{legacyKey:"abdullah",name:"K. Abdullah",course:"Spanish I & Spanish II",level:"9-12",maxPeriods:7}
-};
-
-const TEACHER_ID_BY_LEGACY_KEY=Object.fromEntries(
-  Object.entries(TEACHERS_BY_ID).map(([id,profile])=>[profile.legacyKey,id])
-);
-
-if(!firebase.apps.length){
-  firebase.initializeApp(firebaseConfig);
-}
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
-
-function collection(database,name){
-  return database.collection(name);
-}
-function addDoc(collectionReference,data){
-  return collectionReference.add(data);
-}
-function serverTimestamp(){
-  return firebase.firestore.FieldValue.serverTimestamp();
-}
 const params=new URLSearchParams(location.search);
-const requestedTeacherId=(params.get("id")||"").trim().toUpperCase();
-const legacyTeacherKey=(params.get("teacher")||"").trim().toLowerCase();
-const requestedResolvedId=requestedTeacherId||TEACHER_ID_BY_LEGACY_KEY[legacyTeacherKey]||"";
-const hasTeacherParameter=Boolean(params.get("id")||params.get("teacher"));
-const personalLinkMode=Boolean(requestedResolvedId&&TEACHERS_BY_ID[requestedResolvedId]);
+const grade=params.get("grade")||"";
+const key=params.get("key")||"";
+const valid=(grade==="9"&&key==="GTL9-SPEARS-2026")||(grade==="10"&&key==="GTL10-SPEARS-2026");
 
-let teacherId="";
-let profile=null;
-let teacherKey="";
-let draftKey="ilp-draft-leadership-unselected";
+gradeHeading.textContent=grade;
+gradeDisplay.value=grade;
+incidentDate.value=new Date().toISOString().slice(0,10);
 
-const form=document.getElementById("portalForm");
-const options=document.getElementById("periodOptions");
-const container=document.getElementById("periodsContainer");
-const periodDataCard=document.getElementById("periodDataCard");
-const submitBtn=document.getElementById("submitBtn");
-const status=document.getElementById("status");
-const progressBar=document.getElementById("progressBar");
-const progressLabel=document.getElementById("progressLabel");
-const leadershipSelectorWrap=document.getElementById("leadershipSelectorWrap");
-const leadershipTeacherSelect=document.getElementById("leadershipTeacherSelect");
-
-document.getElementById("submissionDate").value=new Date().toISOString().slice(0,10);
-
-function levelLabel(level){
-  return level==="6-7"?"Grades 6–7":
-         level==="8"?"Grade 8":
-         level==="9-12"?"Grades 9–12":
-         "Special schedule";
+if(!valid){
+  invalidCard.style.display="block";
+  requestForm.style.display="none";
 }
 
-function populateLeadershipSelector(){
-  Object.entries(TEACHERS_BY_ID)
-    .sort((a,b)=>a[1].name.localeCompare(b[1].name))
-    .forEach(([id,p])=>{
-      const option=document.createElement("option");
-      option.value=id;
-      option.textContent=`${p.name} — ${p.course}`;
-      leadershipTeacherSelect.appendChild(option);
-    });
-}
+const checkedValues=name=>[...document.querySelectorAll(`input[name="${name}"]:checked`)].map(x=>x.value);
+const radioValue=name=>document.querySelector(`input[name="${name}"]:checked`)?.value||"";
 
-function activateTeacher(selectedId,{restore=true}={}){
-  teacherId=selectedId;
-  profile=TEACHERS_BY_ID[teacherId]||null;
-  teacherKey=profile?.legacyKey||"";
-  draftKey="ilp-draft-"+(teacherId||"leadership-unselected");
+const formEl=document.getElementById("requestForm");
+const submitButton=document.getElementById("submitBtn");
+const messageEl=document.getElementById("message");
+const field=id=>document.getElementById(id);
 
-  options.innerHTML="";
-  container.innerHTML="";
-  periodDataCard.style.display="none";
-  form.reset();
-  document.getElementById("submissionDate").value=new Date().toISOString().slice(0,10);
-  status.className="status";
-  status.textContent="";
-
-  if(!profile){
-    document.getElementById("teacherNameDisplay").textContent="Select a teacher";
-    document.getElementById("teacherCourseDisplay").textContent="Choose the teacher for this submission.";
-    document.getElementById("levelDisplay").textContent="Leadership access";
-    document.getElementById("course").value="";
-    submitBtn.disabled=true;
-    updateProgress();
-    return;
-  }
-
-  document.getElementById("teacherNameDisplay").textContent=profile.name;
-  document.getElementById("teacherCourseDisplay").textContent=profile.course;
-  document.getElementById("levelDisplay").textContent=personalLinkMode?"Personal link":levelLabel(profile.level);
-  document.getElementById("course").value=profile.course;
-
-  for(let p=1;p<=profile.maxPeriods;p++){
-    options.insertAdjacentHTML("beforeend",`<label class="period-option"><input type="checkbox" value="${p}">Period ${p}</label>`);
-  }
-
-  submitBtn.disabled=false;
-  if(restore)restoreDraft();
-  updateProgress();
-}
-
-if(personalLinkMode){
-  leadershipSelectorWrap.style.display="none";
-  activateTeacher(requestedResolvedId);
-}else if(hasTeacherParameter){
-  leadershipSelectorWrap.style.display="none";
-  submitBtn.disabled=true;
-  document.getElementById("teacherNameDisplay").textContent="Teacher link not recognized";
-  document.getElementById("teacherCourseDisplay").textContent="Use a valid personal teacher link.";
-  document.getElementById("levelDisplay").textContent="Invalid link";
-  status.className="status err";
-  const receivedId=params.get("id")||params.get("teacher")||"none";
-  status.textContent=`This teacher link is not recognized. Link code received: ${receivedId}`;
-}else{
-  populateLeadershipSelector();
-  leadershipSelectorWrap.style.display="block";
-  activateTeacher("",{restore:false});
-  leadershipTeacherSelect.addEventListener("change",()=>{
-    activateTeacher(leadershipTeacherSelect.value);
-  });
-}
-
-options.addEventListener("change",()=>{renderPeriods();saveDraft();updateProgress()});
-form.addEventListener("input",()=>{saveDraft();updateProgress()});
-document.getElementById("clearDraftBtn").addEventListener("click",clearDraft);
-document.getElementById("newSubmissionBtn").addEventListener("click",resetForm);
-
-function renderPeriods(){
-  const selected=[...options.querySelectorAll("input:checked")].map(x=>Number(x.value)).sort((a,b)=>a-b);
-  periodDataCard.style.display=selected.length?"block":"none";
-  const old={};
-  container.querySelectorAll(".period-card").forEach(card=>old[card.dataset.period]=readCard(card));
-  container.innerHTML="";
-  selected.forEach(p=>{
-    container.insertAdjacentHTML("beforeend",`
-    <div class="period-card" data-period="${p}">
-      <div class="period-head"><strong>Period ${p}</strong><span class="badge">Instructional period</span></div>
-      <div class="grid2">
-        <div class="field"><label>Objective / standard <span class="required">*</span></label><input class="objective" required></div>
-        <div class="field"><label>Students assessed <span class="required">*</span></label><input class="assessed" type="number" min="0" required value="0"></div>
-      </div>
-      <div class="grid5">
-        <div class="field"><label>Mastered</label><input class="mastered" type="number" min="0" value="0"></div>
-        <div class="field"><label>Met</label><input class="met" type="number" min="0" value="0"></div>
-        <div class="field"><label>Approached</label><input class="approached" type="number" min="0" value="0"></div>
-        <div class="field"><label>Did not meet</label><input class="notmet" type="number" min="0" value="0"></div>
-        <div class="field"><label>Masters + Meets + Approaches %</label><input class="percent" readonly value="0%"></div>
-      </div>
-      <div class="check"></div>
-    </div>`);
-    const card=container.lastElementChild;
-    if(old[p])writeCard(card,old[p]);
-    card.querySelectorAll("input[type=number]").forEach(i=>i.addEventListener("input",()=>validateCard(card)));
-    validateCard(card);
-  });
-}
-
-function readCard(card){
-  return{
-    objective:card.querySelector(".objective").value,
-    assessed:+card.querySelector(".assessed").value||0,
-    mastered:+card.querySelector(".mastered").value||0,
-    met:+card.querySelector(".met").value||0,
-    approached:+card.querySelector(".approached").value||0,
-    didNotMeet:+card.querySelector(".notmet").value||0
-  };
-}
-function writeCard(card,d){
-  card.querySelector(".objective").value=d.objective||"";
-  card.querySelector(".assessed").value=d.assessed||0;
-  card.querySelector(".mastered").value=d.mastered||0;
-  card.querySelector(".met").value=d.met||0;
-  card.querySelector(".approached").value=d.approached||0;
-  card.querySelector(".notmet").value=d.didNotMeet||0;
-}
-function validateCard(card){
-  const d=readCard(card),sum=d.mastered+d.met+d.approached+d.didNotMeet;
-  card.querySelector(".percent").value=d.assessed?Math.round(((d.mastered+d.met+d.approached)/d.assessed)*100)+"%":"0%";
-  const c=card.querySelector(".check");
-  if(sum===d.assessed){c.textContent="✓ Counts match students assessed.";c.style.color="#39734b"}
-  else{c.textContent=`Counts total ${sum}; students assessed is ${d.assessed}.`;c.style.color="#b94831"}
-}
-
-function updateProgress(){
-  let step=1;
-  const type=document.querySelector('input[name="submissionType"]:checked');
-  if(type&&document.getElementById("assessmentName").value.trim()&&document.getElementById("tekNumber").value.trim())step=2;
-  if(options.querySelectorAll("input:checked").length)step=3;
-  if(container.querySelector(".period-card"))step=4;
-  if(document.getElementById("misconceptions").value.trim()&&document.getElementById("outcome").value.trim()&&document.getElementById("causes").value.trim()&&document.getElementById("solutions").value.trim())step=5;
-  progressBar.style.width=(step*20)+"%";
-  progressLabel.textContent=`Step ${step} of 5`;
-}
-function getDraft(){
-  return{
-    date:document.getElementById("submissionDate").value,
-    assessmentName:document.getElementById("assessmentName").value,
-    tekNumber:document.getElementById("tekNumber").value,
-    type:document.querySelector('input[name="submissionType"]:checked')?.value||"",
-    selected:[...options.querySelectorAll("input:checked")].map(x=>x.value),
-    periods:[...container.querySelectorAll(".period-card")].map(readCard),
-    misconceptions:document.getElementById("misconceptions").value,
-    outcome:document.getElementById("outcome").value,
-    causes:document.getElementById("causes").value,
-    solutions:document.getElementById("solutions").value
-  };
-}
-let saveTimer;
-function saveDraft(){
-  if(!profile)return;
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{
-    localStorage.setItem(draftKey,JSON.stringify(getDraft()));
-    document.getElementById("autosaveText").textContent="Draft saved on this device.";
-  },350);
-}
-function restoreDraft(){
-  const raw=localStorage.getItem(draftKey);
-  if(!raw)return;
-  try{
-    const d=JSON.parse(raw);
-    document.getElementById("submissionDate").value=d.date||new Date().toISOString().slice(0,10);
-    document.getElementById("assessmentName").value=d.assessmentName||"";
-    document.getElementById("tekNumber").value=d.tekNumber||"";
-    if(d.type){const r=document.querySelector(`input[name="submissionType"][value="${d.type}"]`);if(r)r.checked=true}
-    (d.selected||[]).forEach(v=>{const cb=options.querySelector(`input[value="${v}"]`);if(cb)cb.checked=true});
-    renderPeriods();
-    [...container.querySelectorAll(".period-card")].forEach((card,i)=>{if(d.periods?.[i])writeCard(card,d.periods[i]);validateCard(card)});
-    ["misconceptions","outcome","causes","solutions"].forEach(id=>document.getElementById(id).value=d[id]||"");
-    updateProgress();
-  }catch(e){}
-}
-function clearDraft(){
-  localStorage.removeItem(draftKey);
-  resetForm();
-}
-function resetForm(){
-  form.reset();
-  document.getElementById("submissionDate").value=new Date().toISOString().slice(0,10);
-  document.getElementById("course").value=profile?.course||"";
-  options.querySelectorAll("input").forEach(x=>x.checked=false);
-  container.innerHTML="";
-  periodDataCard.style.display="none";
-  form.style.display="block";
-  document.getElementById("identityCard").style.display="block";
-  document.getElementById("successCard").style.display="none";
-  status.className="status";
-  updateProgress();
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-form.addEventListener("submit",async e=>{
+formEl.addEventListener("submit",async e=>{
   e.preventDefault();
-  status.className="status";
-  const cards=[...container.querySelectorAll(".period-card")];
-  if(!profile){status.className="status err";status.textContent="Select a teacher before submitting.";return}
-  if(!cards.length){status.className="status err";status.textContent="Select at least one instructional period.";return}
-  const periods=cards.map(card=>({period:Number(card.dataset.period),...readCard(card)}));
-  const mismatch=periods.find(p=>p.assessed!==p.mastered+p.met+p.approached+p.didNotMeet);
-  if(mismatch){status.className="status err";status.textContent=`Correct the counts for Period ${mismatch.period} before submitting.`;return}
-  const totals=periods.reduce((a,p)=>({assessed:a.assessed+p.assessed,mastered:a.mastered+p.mastered,met:a.met+p.met,approached:a.approached+p.approached,didNotMeet:a.didNotMeet+p.didNotMeet}),{assessed:0,mastered:0,met:0,approached:0,didNotMeet:0});
-  const record={
-    teacherId,teacherKey,teacherName:profile.name,course:profile.course,level:profile.level,
-    submissionDate:document.getElementById("submissionDate").value,
-    submissionType:document.querySelector('input[name="submissionType"]:checked').value,
-    assessmentName:document.getElementById("assessmentName").value.trim(),
-    tekNumber:document.getElementById("tekNumber").value.trim(),
-    periods,
-    misconceptions:document.getElementById("misconceptions").value.trim(),
-    outcome:document.getElementById("outcome").value.trim(),
-    causes:document.getElementById("causes").value.trim(),
-    solutions:document.getElementById("solutions").value.trim(),
-    totals:{...totals,mastersMeetsApproachesPercent:totals.assessed?Math.round(((totals.mastered+totals.met+totals.approached)/totals.assessed)*100):0},
-    createdAt:serverTimestamp(),source:"stingem-teacher-portal-v4.1"
-  };
-  submitBtn.disabled=true;submitBtn.textContent="Submitting…";
+  submitButton.disabled=true;
+  submitButton.textContent="Submitting…";
+  messageEl.className="message";
+  messageEl.textContent="";
+
   try{
-    const ref=await addDoc(collection(db,"instructionalSubmissions"),record);
-    localStorage.removeItem(draftKey);
-    form.style.display="none";
-    document.getElementById("identityCard").style.display="none";
-    document.getElementById("successCard").style.display="block";
-    document.getElementById("confirmationText").textContent=`Confirmation: ${ref.id.slice(0,8).toUpperCase()}`;
-    window.scrollTo({top:0,behavior:"smooth"});
+    const services=checkedValues("services");
+    const previous=checkedValues("previousInterventions");
+
+    const record={
+      portalKey:key,
+      grade,
+      studentName:field("studentName").value.trim(),
+      studentId:field("studentId").value.trim(),
+      homeroom:field("homeroom").value.trim(),
+      submittedByName:field("submittedByName").value.trim(),
+      incidentDate:field("incidentDate").value,
+      incidentTime:field("incidentTime").value,
+      location:field("location").value.trim(),
+      studentServices:services,
+      isSped:services.includes("SPED (IEP)")?"Yes":"No",
+      behaviorCategory:field("behaviorCategory").value,
+      severity:radioValue("severity"),
+      concernSummary:`${field("behaviorCategory").value} — ${radioValue("severity")}`,
+      incidentDescription:field("incidentDescription").value.trim(),
+      staffActions:checkedValues("staffActions"),
+      studentResponse:field("studentResponse").value,
+      studentWitnesses:field("studentWitnesses").value.trim(),
+      staffWitnesses:field("staffWitnesses").value.trim(),
+      evidence:checkedValues("evidence"),
+      parentContacted:radioValue("parentContacted"),
+      parentContactBy:field("parentContactBy").value.trim(),
+      contactDate:field("contactDate").value,
+      contactTime:field("contactTime").value,
+      contactMethod:field("contactMethod").value,
+      parentContactNotes:field("parentContactNotes").value.trim(),
+      previousInterventions:previous,
+      interventionsAttempted:previous.join(", "),
+      possibleTrigger:field("possibleTrigger").value,
+      interruptedInstruction:field("interruptedInstruction").value,
+      minutesInterrupted:Number(field("minutesInterrupted").value)||0,
+      othersAffected:field("othersAffected").value,
+      suggestedAction:field("suggestedAction").value,
+      additionalNotes:field("additionalNotes").value.trim(),
+      status:"Open",
+      submittedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await Promise.race([
+      db.collection("disciplineRequests").add(record),
+      new Promise((_,reject)=>setTimeout(
+        ()=>reject(new Error("The submission timed out. Check your internet connection and Firebase rules, then try again.")),
+        15000
+      ))
+    ]);
+
+    messageEl.textContent="Behavior concern submitted successfully.";
+    messageEl.className="message show ok";
+    formEl.reset();
+    field("gradeDisplay").value=grade;
+    field("incidentDate").value=new Date().toISOString().slice(0,10);
+    window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
   }catch(err){
-    console.error(err);
-    status.className="status err";
-    status.textContent="Firebase rejected the submission. Confirm that the Firestore rule is published and try again.";
+    console.error("Behavior form submission error:",err);
+    messageEl.textContent=`Submission failed: ${err.message||"Unknown error"}`;
+    messageEl.className="message show err";
   }finally{
-    submitBtn.disabled=false;submitBtn.textContent="Submit instructional data";
+    submitButton.disabled=false;
+    submitButton.textContent="Submit Behavior Concern";
   }
 });
-updateProgress();
 </script>
 </body>
 </html>
