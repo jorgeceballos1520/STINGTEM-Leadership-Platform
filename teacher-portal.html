@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -343,9 +342,7 @@ textarea{min-height:92px;resize:vertical}
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
 const firebaseConfig={
   apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
@@ -647,11 +644,9 @@ form.addEventListener("submit",async e=>{
   try{
     const ref=await addDoc(collection(db,"instructionalSubmissions"),record);
     localStorage.removeItem(draftKey);
-    form.style.display="none";
-    document.getElementById("identityCard").style.display="none";
-    document.getElementById("successCard").style.display="block";
-    document.getElementById("confirmationText").textContent=`Confirmation: ${ref.id.slice(0,8).toUpperCase()}`;
-    window.scrollTo({top:0,behavior:"smooth"});
+
+    // Redirect the teacher to their personal dashboard after a successful submission.
+    window.location.href=`dashboard.html?id=${encodeURIComponent(teacherId)}`;
   }catch(err){
     console.error(err);
     status.className="status err";
@@ -662,6 +657,5 @@ form.addEventListener("submit",async e=>{
 });
 updateProgress();
 </script>
-
 </body>
 </html>
