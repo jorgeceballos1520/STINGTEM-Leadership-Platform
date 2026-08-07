@@ -458,7 +458,7 @@ function activateTeacher(selectedId,{restore=true}={}){
   document.getElementById("teacherCourseDisplay").textContent=profile.course;
   document.getElementById("levelDisplay").textContent=personalLinkMode?"Personal link":levelLabel(profile.level);
   document.getElementById("course").value=profile.course;
-  personalDashboardLink.href=`dashboard.html?id=${encodeURIComponent(teacherId)}`;
+  personalDashboardLink.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}`;
 
   for(let p=1;p<=profile.maxPeriods;p++){
     options.insertAdjacentHTML("beforeend",`<label class="period-option"><input type="checkbox" value="${p}">Period ${p}</label>`);
@@ -649,7 +649,7 @@ form.addEventListener("submit",async e=>{
     localStorage.removeItem(draftKey);
 
     // Redirect the teacher to their personal dashboard after a successful submission.
-    window.location.href=`dashboard.html?id=${encodeURIComponent(teacherId)}`;
+    window.location.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}`;
   }catch(err){
     console.error(err);
     status.className="status err";
