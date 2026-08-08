@@ -63,6 +63,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig={
   apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
@@ -89,8 +90,10 @@ const TEACHERS_BY_ID={
 
 if(!firebase.apps.length){firebase.initializeApp(firebaseConfig)}
 const db=firebase.firestore();
+const auth=firebase.auth();
 const params=new URLSearchParams(window.location.search);
 const teacherId=(params.get("id")||"").trim().toUpperCase();
+const accessKey=(params.get("key")||"").trim();
 const profile=TEACHERS_BY_ID[teacherId]||null;
 const statusBox=document.getElementById("statusBox");
 const dashboardContent=document.getElementById("dashboardContent");
@@ -138,6 +141,66 @@ function renderHistory(records){
   records.forEach(record=>{const m=getMetrics(record),tr=document.createElement("tr");tr.innerHTML=`<td>${safeText(record.submissionDate)}</td><td>${safeText(record.submissionType)}</td><td>${safeText(record.assessmentName)}</td><td>${safeText(record.tekNumber)}</td><td>${m.approachesPlus}%</td><td>${m.meetsPlus}%</td><td>${m.masters}%</td>`;body.appendChild(tr)});
 }
 
+
+function serverTimestamp(){
+  return firebase.firestore.FieldValue.serverTimestamp();
+}
+
+async function getCurrentUser(){
+  await new Promise(resolve=>{
+    const unsubscribe=auth.onAuthStateChanged(()=>{
+      unsubscribe();
+      resolve();
+    });
+  });
+  return auth.currentUser;
+}
+
+async function ensureTeacherSession(){
+  if(!teacherId || !profile || !accessKey){
+    throw new Error("Missing teacher ID or access key.");
+  }
+
+  let user=await getCurrentUser();
+
+  if(!user){
+    const credential=await auth.signInAnonymously();
+    user=credential.user;
+  }
+
+  let sessionRef=db.collection("teacherSessions").doc(user.uid);
+  let sessionSnap=await sessionRef.get();
+
+  if(sessionSnap.exists && sessionSnap.data().teacherId!==teacherId){
+    await auth.signOut();
+    const credential=await auth.signInAnonymously();
+    user=credential.user;
+    sessionRef=db.collection("teacherSessions").doc(user.uid);
+    sessionSnap=await sessionRef.get();
+  }
+
+  const accessSnap=await db.collection("teacherAccess").doc(accessKey).get();
+  if(!accessSnap.exists){
+    throw new Error("Teacher access key not found.");
+  }
+
+  const access=accessSnap.data();
+  if(access.active!==true || access.teacherId!==teacherId){
+    throw new Error("Teacher access key does not match this teacher.");
+  }
+
+  if(!sessionSnap.exists){
+    await sessionRef.set({
+      teacherId:teacherId,
+      accessKey:accessKey,
+      active:true,
+      createdAt:serverTimestamp()
+    });
+  }
+
+  return true;
+}
+
 async function loadTeacherDashboard(){
   if(!teacherId||!profile){
     statusBox.className="status err";
@@ -147,13 +210,15 @@ async function loadTeacherDashboard(){
   }
   document.getElementById("teacherHeading").textContent=`${profile.name} — My Instructional Progress`;
   document.getElementById("teacherSubheading").textContent=profile.course;
-  submitDataBtn.href=`teacher-portal.html?id=${encodeURIComponent(teacherId)}`;
+  submitDataBtn.href=`teacher-portal.html?id=${encodeURIComponent(teacherId)}&key=${encodeURIComponent(accessKey)}`;
 
   try{
+    await ensureTeacherSession();
+
     const snap=await db.collection("instructionalSubmissions").where("teacherId","==",teacherId).get();
     const records=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
     records.sort((a,b)=>{const ad=a.submissionDate||"",bd=b.submissionDate||"";if(ad!==bd)return bd.localeCompare(ad);const at=a.createdAt?.toMillis?.()||0,bt=b.createdAt?.toMillis?.()||0;return bt-at});
-    if(!records.length){statusBox.className="status info";statusBox.innerHTML=`No instructional submissions are available yet. <a href="teacher-portal.html?id=${encodeURIComponent(teacherId)}">Submit your first Exit Ticket or Exam.</a>`;return}
+    if(!records.length){statusBox.className="status info";statusBox.innerHTML=`No instructional submissions are available yet. <a href="teacher-portal.html?id=${encodeURIComponent(teacherId)}&key=${encodeURIComponent(accessKey)}">Submit your first Exit Ticket or Exam.</a>`;return}
     renderLatest(records[0]);renderHistory(records);statusBox.className="hidden";dashboardContent.classList.remove("hidden");
   }catch(err){console.error(err);statusBox.className="status err";statusBox.textContent="Your progress report could not be loaded. Firestore access may still need to be enabled for teacher dashboard viewing."}
 }
