@@ -343,6 +343,7 @@ textarea{min-height:92px;resize:vertical}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig={
   apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
@@ -375,6 +376,7 @@ if(!firebase.apps.length){
   firebase.initializeApp(firebaseConfig);
 }
 const db=firebase.firestore();
+const auth=firebase.auth();
 
 function collection(database,name){
   return database.collection(name);
@@ -386,6 +388,7 @@ function serverTimestamp(){
   return firebase.firestore.FieldValue.serverTimestamp();
 }
 const params=new URLSearchParams(location.search);
+const accessKey=(params.get("key")||"").trim();
 const requestedTeacherId=(params.get("id")||"").trim().toUpperCase();
 const legacyTeacherKey=(params.get("teacher")||"").trim().toLowerCase();
 const requestedResolvedId=requestedTeacherId||TEACHER_ID_BY_LEGACY_KEY[legacyTeacherKey]||"";
@@ -396,6 +399,7 @@ let teacherId="";
 let profile=null;
 let teacherKey="";
 let draftKey="ilp-draft-leadership-unselected";
+let sessionReady=false;
 
 const form=document.getElementById("portalForm");
 const options=document.getElementById("periodOptions");
@@ -458,20 +462,117 @@ function activateTeacher(selectedId,{restore=true}={}){
   document.getElementById("teacherCourseDisplay").textContent=profile.course;
   document.getElementById("levelDisplay").textContent=personalLinkMode?"Personal link":levelLabel(profile.level);
   document.getElementById("course").value=profile.course;
-  personalDashboardLink.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}`;
+  personalDashboardLink.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}&key=${encodeURIComponent(accessKey)}`;
 
   for(let p=1;p<=profile.maxPeriods;p++){
     options.insertAdjacentHTML("beforeend",`<label class="period-option"><input type="checkbox" value="${p}">Period ${p}</label>`);
   }
 
-  submitBtn.disabled=false;
+  submitBtn.disabled=personalLinkMode && !sessionReady;
   if(restore)restoreDraft();
   updateProgress();
 }
 
+
+async function getCurrentUser(){
+  await new Promise(resolve=>{
+    const unsubscribe=auth.onAuthStateChanged(()=>{
+      unsubscribe();
+      resolve();
+    });
+  });
+  return auth.currentUser;
+}
+
+async function ensureTeacherSession(){
+  if(!personalLinkMode || !accessKey){
+    throw new Error("Missing teacher access key.");
+  }
+
+  let user=await getCurrentUser();
+
+  if(!user){
+    const credential=await auth.signInAnonymously();
+    user=credential.user;
+  }
+
+  // If this browser already has a teacher session for another teacher,
+  // create a fresh anonymous Firebase identity.
+  let sessionRef=db.collection("teacherSessions").doc(user.uid);
+  let sessionSnap=await sessionRef.get();
+
+  if(sessionSnap.exists && sessionSnap.data().teacherId!==requestedResolvedId){
+    await auth.signOut();
+    const credential=await auth.signInAnonymously();
+    user=credential.user;
+    sessionRef=db.collection("teacherSessions").doc(user.uid);
+    sessionSnap=await sessionRef.get();
+  }
+
+  // Validate the secret teacher key.
+  const accessSnap=await db.collection("teacherAccess").doc(accessKey).get();
+  if(!accessSnap.exists){
+    throw new Error("Teacher access key not found.");
+  }
+
+  const access=accessSnap.data();
+  if(access.active!==true || access.teacherId!==requestedResolvedId){
+    throw new Error("Teacher access key does not match this teacher.");
+  }
+
+  // Create the verified session only if one does not already exist.
+  if(!sessionSnap.exists){
+    await sessionRef.set({
+      teacherId:requestedResolvedId,
+      accessKey:accessKey,
+      active:true,
+      createdAt:serverTimestamp()
+    });
+  }
+
+  sessionReady=true;
+  return true;
+}
+
+async function startPersonalPortal(){
+  try{
+    leadershipSelectorWrap.style.display="none";
+    activateTeacher(requestedResolvedId,{restore:false});
+    submitBtn.disabled=true;
+    status.className="status";
+    status.textContent="";
+
+    await ensureTeacherSession();
+
+    activateTeacher(requestedResolvedId);
+    personalDashboardLink.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}&key=${encodeURIComponent(accessKey)}`;
+    submitBtn.disabled=false;
+  }catch(err){
+    console.error(err);
+    leadershipSelectorWrap.style.display="none";
+    submitBtn.disabled=true;
+    document.getElementById("teacherNameDisplay").textContent="Teacher link not recognized";
+    document.getElementById("teacherCourseDisplay").textContent="Please use your complete personal teacher link.";
+    document.getElementById("levelDisplay").textContent="Invalid link";
+    personalDashboardLink.href="#";
+    status.className="status err";
+    status.textContent="This personal teacher link could not be verified. Please use the link provided by Mr. Ceballos.";
+  }
+}
+
 if(personalLinkMode){
-  leadershipSelectorWrap.style.display="none";
-  activateTeacher(requestedResolvedId);
+  if(accessKey){
+    startPersonalPortal();
+  }else{
+    leadershipSelectorWrap.style.display="none";
+    submitBtn.disabled=true;
+    document.getElementById("teacherNameDisplay").textContent="Teacher link incomplete";
+    document.getElementById("teacherCourseDisplay").textContent="Please use the complete personal link provided by Mr. Ceballos.";
+    document.getElementById("levelDisplay").textContent="Missing access key";
+    personalDashboardLink.href="#";
+    status.className="status err";
+    status.textContent="This teacher link is missing its secure access key.";
+  }
 }else if(hasTeacherParameter){
   leadershipSelectorWrap.style.display="none";
   submitBtn.disabled=true;
@@ -649,7 +750,7 @@ form.addEventListener("submit",async e=>{
     localStorage.removeItem(draftKey);
 
     // Redirect the teacher to their personal dashboard after a successful submission.
-    window.location.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}`;
+    window.location.href=`teacher-dashboard.html?id=${encodeURIComponent(teacherId)}&key=${encodeURIComponent(accessKey)}`;
   }catch(err){
     console.error(err);
     status.className="status err";
