@@ -1,1 +1,773 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
+  <title>Roster Import | IDEA Spears</title>
+
+  <style>
+    :root{
+      --navy:#17283c;
+      --cream:#f5f3ed;
+      --white:#ffffff;
+      --border:#d9dde3;
+      --muted:#667487;
+      --green:#39734b;
+      --red:#b94831;
+      --blue:#1677b8;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--cream);
+      color:var(--navy);
+      font-family:Arial,sans-serif;
+    }
+
+    .app{
+      max-width:1000px;
+      margin:auto;
+      padding:24px;
+    }
+
+    .hero{
+      background:var(--navy);
+      color:white;
+      padding:24px;
+      border-radius:16px;
+      margin-bottom:18px;
+    }
+
+    .hero h1{
+      margin:0 0 6px;
+      font-family:Georgia,serif;
+    }
+
+    .card{
+      background:white;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:18px;
+      margin-bottom:16px;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      background:white;
+      color:var(--navy);
+    }
+
+    .btn.primary{
+      background:var(--navy);
+      color:white;
+    }
+
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    input[type=file]{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:white;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .alert{
+      display:none;
+      padding:12px;
+      margin-top:12px;
+      border-radius:8px;
+    }
+
+    .alert.show{
+      display:block;
+    }
+
+    .ok{
+      background:#e3f0e6;
+      color:#245d35;
+    }
+
+    .err{
+      background:#f9e4dd;
+      color:#78311f;
+    }
+
+    .info{
+      background:#e7eff8;
+      color:#145c8b;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin:15px 0;
+    }
+
+    .stat{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:14px;
+      background:#fafafa;
+    }
+
+    .stat b{
+      display:block;
+      font-size:24px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    th,td{
+      padding:9px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+    }
+
+    th{
+      background:#f4f5f7;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      max-height:430px;
+      border:1px solid var(--border);
+      border-radius:8px;
+    }
+
+    #main{
+      display:none;
+    }
+
+    @media(max-width:700px){
+      .stats{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="hero">
+    <h1>High School Roster Import</h1>
+    <div>IDEA Spears College Prep · Administrator Tool</div>
+  </div>
+
+  <div class="card" id="authCard">
+    <h3>Administrator Sign-In</h3>
+
+    <p class="muted">
+      Only the authorized administrator can upload or modify the student roster.
+    </p>
+
+    <button class="btn primary" id="signInBtn">
+      Sign in with Google
+    </button>
+
+    <div id="authMsg" class="alert"></div>
+  </div>
+
+  <div id="main">
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+        <div>
+          <h3 style="margin:0">Import Student Roster</h3>
+          <div class="muted" id="userEmail"></div>
+        </div>
+
+        <button class="btn" id="signOutBtn">
+          Sign Out
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+
+      <h3>1. Choose High School Rosters CSV</h3>
+
+      <p class="muted">
+        Required columns: Last Name, First Name, Name, student ID,
+        Home Room, Grade Level.
+      </p>
+
+      <input type="file"
+             id="csvFile"
+             accept=".csv,text/csv">
+
+      <div id="fileMsg" class="alert"></div>
+
+    </div>
+
+    <div class="card" id="previewCard" style="display:none">
+
+      <h3>2. Review Before Importing</h3>
+
+      <div class="stats">
+
+        <div class="stat">
+          <b id="studentCount">0</b>
+          <span class="muted">Students Found</span>
+        </div>
+
+        <div class="stat">
+          <b id="gradeCount">0</b>
+          <span class="muted">Grade Levels</span>
+        </div>
+
+        <div class="stat">
+          <b id="errorCount">0</b>
+          <span class="muted">Rows With Problems</span>
+        </div>
+
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Grade</th>
+              <th>Home Room</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="previewRows"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:16px;text-align:right">
+        <button
+          class="btn primary"
+          id="importBtn"
+          disabled>
+          Import Students to Firebase
+        </button>
+      </div>
+
+      <div id="importMsg" class="alert"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+
+<script>
+
+const firebaseConfig = {
+  apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
+  authDomain:"idea-spears.firebaseapp.com",
+  projectId:"idea-spears",
+  storageBucket:"idea-spears.firebasestorage.app",
+  messagingSenderId:"619672486663",
+  appId:"1:619672486663:web:8672bb614d892ea00e7ba2",
+  measurementId:"G-0SCW3PVT1D"
+};
+
+if(!firebase.apps.length){
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const provider = new firebase.auth.GoogleAuthProvider();
+
+const ADMIN_EMAIL = "jorge.ceballos1520@gmail.com";
+
+let studentsToImport = [];
+
+const $ = id => document.getElementById(id);
+
+
+/* =========================
+   ADMIN AUTHENTICATION
+========================= */
+
+$("signInBtn").onclick = async () => {
+
+  try {
+
+    await auth.signInWithPopup(provider);
+
+  } catch(error) {
+
+    showMessage(
+      "authMsg",
+      error.message,
+      "err"
+    );
+
+  }
+
+};
+
+
+$("signOutBtn").onclick = () => {
+
+  auth.signOut();
+
+};
+
+
+auth.onAuthStateChanged(user => {
+
+  if(!user){
+
+    $("authCard").style.display = "block";
+    $("main").style.display = "none";
+
+    return;
+
+  }
+
+
+  if(user.email !== ADMIN_EMAIL){
+
+    showMessage(
+      "authMsg",
+      "Access denied. This page is restricted to the administrator account.",
+      "err"
+    );
+
+    auth.signOut();
+
+    return;
+
+  }
+
+
+  $("authCard").style.display = "none";
+  $("main").style.display = "block";
+
+  $("userEmail").textContent =
+    "Signed in as " + user.email;
+
+});
+
+
+/* =========================
+   CSV READING
+========================= */
+
+$("csvFile").addEventListener("change", function(event){
+
+  const file = event.target.files[0];
+
+  if(!file){
+    return;
+  }
+
+
+  Papa.parse(file, {
+
+    header:true,
+
+    skipEmptyLines:true,
+
+    transformHeader: header =>
+      header
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .replace(/\s+/g, " "),
+
+    complete:function(results){
+
+      processRoster(results.data);
+
+    },
+
+    error:function(error){
+
+      showMessage(
+        "fileMsg",
+        "Could not read the CSV file: " + error.message,
+        "err"
+      );
+
+    }
+
+  });
+
+});
+
+
+/* =========================
+   ROSTER PROCESSING
+========================= */
+
+function processRoster(rows){
+
+  studentsToImport = [];
+
+  let errorTotal = 0;
+
+  const gradeSet = new Set();
+
+
+  rows.forEach((row,index) => {
+
+    const studentId =
+      String(row["student ID"] ?? "").trim();
+
+    const firstName =
+      String(row["First Name"] ?? "").trim();
+
+    const lastName =
+      String(row["Last Name"] ?? "").trim();
+
+    const displayName =
+      String(row["Name"] ?? "").trim();
+
+    const homeRoom =
+      String(row["Home Room"] ?? "").trim();
+
+    const gradeLevel =
+      String(row["Grade Level"] ?? "").trim();
+
+
+    const problems = [];
+
+
+    if(!studentId){
+      problems.push("Missing Student ID");
+    }
+
+    if(!firstName){
+      problems.push("Missing First Name");
+    }
+
+    if(!lastName){
+      problems.push("Missing Last Name");
+    }
+
+    if(!displayName){
+      problems.push("Missing Name");
+    }
+
+    if(!gradeLevel){
+      problems.push("Missing Grade");
+    }
+
+
+    if(problems.length){
+      errorTotal++;
+    }
+
+
+    if(gradeLevel){
+      gradeSet.add(gradeLevel);
+    }
+
+
+    studentsToImport.push({
+
+      rowNumber:index + 2,
+
+      studentId,
+
+      firstName,
+
+      lastName,
+
+      displayName,
+
+      homeRoom,
+
+      gradeLevel,
+
+      valid:problems.length === 0,
+
+      problems
+
+    });
+
+  });
+
+
+  renderPreview(
+    studentsToImport,
+    errorTotal,
+    gradeSet.size
+  );
+
+}
+
+
+/* =========================
+   PREVIEW
+========================= */
+
+function renderPreview(students,errorTotal,gradeTotal){
+
+  $("previewCard").style.display = "block";
+
+  $("studentCount").textContent =
+    students.length;
+
+  $("gradeCount").textContent =
+    gradeTotal;
+
+  $("errorCount").textContent =
+    errorTotal;
+
+
+  $("previewRows").innerHTML =
+    students.map(student => {
+
+      const status = student.valid
+        ? "✓ Ready"
+        : "⚠ " + student.problems.join(", ");
+
+      return `
+        <tr>
+          <td>${escapeHtml(student.studentId)}</td>
+          <td>${escapeHtml(student.displayName)}</td>
+          <td>${escapeHtml(student.gradeLevel)}</td>
+          <td>${escapeHtml(student.homeRoom)}</td>
+          <td>${escapeHtml(status)}</td>
+        </tr>
+      `;
+
+    }).join("");
+
+
+  if(errorTotal === 0 && students.length > 0){
+
+    $("importBtn").disabled = false;
+
+    showMessage(
+      "fileMsg",
+      students.length +
+      " students found. Review the preview before importing.",
+      "ok"
+    );
+
+  } else {
+
+    $("importBtn").disabled = true;
+
+    showMessage(
+      "fileMsg",
+      "The roster contains " +
+      errorTotal +
+      " row(s) that need to be corrected before importing.",
+      "err"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   FIREBASE IMPORT
+========================= */
+
+$("importBtn").onclick = async function(){
+
+  const validStudents =
+    studentsToImport.filter(student => student.valid);
+
+
+  if(validStudents.length === 0){
+
+    showMessage(
+      "importMsg",
+      "There are no valid students to import.",
+      "err"
+    );
+
+    return;
+
+  }
+
+
+  const confirmed = confirm(
+    "Import " +
+    validStudents.length +
+    " students into Firebase?\n\n" +
+    "Existing students with the same Student ID will be updated."
+  );
+
+
+  if(!confirmed){
+    return;
+  }
+
+
+  $("importBtn").disabled = true;
+
+
+  showMessage(
+    "importMsg",
+    "Importing students. Please do not close this page...",
+    "info"
+  );
+
+
+  try {
+
+    let imported = 0;
+
+    /*
+      Firestore batches support up to 500 operations.
+      We use smaller groups for reliability.
+    */
+
+    const batchSize = 400;
+
+
+    for(let start = 0;
+        start < validStudents.length;
+        start += batchSize){
+
+      const group =
+        validStudents.slice(
+          start,
+          start + batchSize
+        );
+
+      const batch = db.batch();
+
+
+      group.forEach(student => {
+
+        const ref =
+          db.collection("students")
+            .doc(student.studentId);
+
+
+        batch.set(
+          ref,
+          {
+            studentId:student.studentId,
+            firstName:student.firstName,
+            lastName:student.lastName,
+            displayName:student.displayName,
+            homeRoom:student.homeRoom,
+            gradeLevel:student.gradeLevel,
+            active:true,
+            updatedAt:
+              firebase.firestore.FieldValue.serverTimestamp()
+          },
+          {merge:true}
+        );
+
+      });
+
+
+      await batch.commit();
+
+      imported += group.length;
+
+
+      showMessage(
+        "importMsg",
+        "Imported " +
+        imported +
+        " of " +
+        validStudents.length +
+        " students...",
+        "info"
+      );
+
+    }
+
+
+    showMessage(
+      "importMsg",
+      "✓ Import complete. " +
+      validStudents.length +
+      " student records are now in Firebase.",
+      "ok"
+    );
+
+
+  } catch(error){
+
+    console.error(error);
+
+    showMessage(
+      "importMsg",
+      "Import failed: " + error.message,
+      "err"
+    );
+
+    $("importBtn").disabled = false;
+
+  }
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function showMessage(id,text,type){
+
+  const element = $(id);
+
+  element.textContent = text;
+
+  element.className =
+    "alert show " + type;
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      character => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[character])
+    );
+
+}
+
+</script>
+
+</body>
+</html>
