@@ -2205,38 +2205,80 @@ document.getElementById("formImportBtn").addEventListener("click",openFormImport
     }
   }
 
-  const navigation = document.querySelector("aside nav");
+    const navigation = document.querySelector("aside nav");
   if (!navigation) return;
 
   const button = document.createElement("button");
   button.id = "sa-admin-nav";
   button.dataset.view = "accountability";
   button.textContent = "Student Accountability";
-  button.hidden = !allowed();
+  button.hidden = false;
   navigation.appendChild(button);
+
+  function showAccountability() {
+    renderNav();
+
+    if (!allowed()) {
+      const email = fbAuth.currentUser?.email || "Not signed in";
+
+      document.getElementById("main").innerHTML = `
+        <div class="page-head">
+          <div>
+            <h2 class="serif">Student Accountability</h2>
+            <div class="sub">
+              Phone Confiscations &amp; Tardies
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Administrator sign-in required</h3>
+          <p>
+            Current account:
+            <strong>${escapeHTML(email)}</strong>
+          </p>
+          <p>
+            Sign in with
+            <strong>${escapeHTML(ADMIN_EMAIL)}</strong>
+            to view these histories.
+          </p>
+          <p>
+            Use Sign Out in the sidebar to switch accounts.
+          </p>
+        </div>
+      `;
+
+      bind();
+      return;
+    }
+
+    document.getElementById("main").innerHTML = pageHTML();
+    bind();
+    bindPage();
+  }
 
   const originalRender = render;
 
   render = function () {
-    button.hidden = !allowed();
+    button.hidden = false;
 
-    if (view.screen !== "accountability") {
+    if (view.screen === "accountability") {
+      showAccountability();
+    } else {
       return originalRender.apply(this, arguments);
     }
-
-    renderNav();
-    document.getElementById("main").innerHTML = pageHTML();
-    bind();
-    bindPage();
   };
 
   button.onclick = () => {
-    view = { screen: "accountability", teacherId: null };
+    view = {
+      screen: "accountability",
+      teacherId: null
+    };
     render();
   };
 
   fbAuth.onAuthStateChanged(() => {
-    button.hidden = !allowed();
+    button.hidden = false;
 
     if (!allowed()) {
       report.request++;
@@ -2245,10 +2287,10 @@ document.getElementById("formImportBtn").addEventListener("click",openFormImport
       report.errors = {};
       report.loaded = false;
       report.loading = false;
+    }
 
-      if (view.screen === "accountability") {
-        document.getElementById("main").innerHTML = pageHTML();
-      }
+    if (view.screen === "accountability") {
+      render();
     }
   });
 })();
