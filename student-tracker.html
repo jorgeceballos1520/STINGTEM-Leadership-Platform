@@ -1,0 +1,1102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Student Tracker | IDEA Spears</title>
+
+  <style>
+    :root{
+      --navy:#17283c;
+      --cream:#f5f3ed;
+      --white:#ffffff;
+      --border:#d8dde5;
+      --muted:#687588;
+      --green:#39734b;
+      --red:#b94831;
+      --blue:#1f6fa5;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--cream);
+      color:var(--navy);
+      font-family:Arial,sans-serif;
+    }
+
+    .app{
+      max-width:760px;
+      margin:auto;
+      padding:20px;
+    }
+
+    .hero{
+      background:var(--navy);
+      color:white;
+      padding:24px;
+      border-radius:16px;
+      margin-bottom:18px;
+    }
+
+    .hero h1{
+      margin:0 0 6px;
+      font-family:Georgia,serif;
+    }
+
+    .card{
+      background:white;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:20px;
+      margin-bottom:16px;
+    }
+
+    label{
+      display:block;
+      font-weight:700;
+      margin:16px 0 7px;
+    }
+
+    select,
+    input,
+    textarea{
+      width:100%;
+      padding:13px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      font-size:16px;
+      background:white;
+    }
+
+    .event-buttons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .event-btn{
+      padding:18px;
+      border:2px solid var(--border);
+      background:white;
+      border-radius:12px;
+      font-size:17px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .event-btn.active{
+      border-color:var(--navy);
+      background:var(--navy);
+      color:white;
+    }
+
+    .primary{
+      width:100%;
+      margin-top:20px;
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:var(--navy);
+      color:white;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .primary:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .student-info{
+      margin-top:15px;
+      padding:13px;
+      background:#f6f7f9;
+      border-radius:9px;
+      display:none;
+    }
+
+    .alert{
+      display:none;
+      margin-top:14px;
+      padding:13px;
+      border-radius:9px;
+      font-weight:600;
+    }
+
+    .alert.show{
+      display:block;
+    }
+
+    .ok{
+      background:#e3f1e7;
+      color:#225c34;
+    }
+
+    .err{
+      background:#f9e3dc;
+      color:#7d321f;
+    }
+
+    .info{
+      background:#e7eff8;
+      color:#175d89;
+    }
+
+    #tracker{
+      display:none;
+    }
+
+    #tardyFields{
+      display:none;
+    }
+
+    .teacher{
+      margin-top:8px;
+      opacity:.9;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="hero">
+    <h1>Student Tracker</h1>
+    <div>IDEA Spears College Prep</div>
+    <div class="teacher" id="teacherDisplay"></div>
+  </div>
+
+  <div class="card" id="loadingCard">
+    <strong>Verifying teacher access…</strong>
+  </div>
+
+  <div id="tracker">
+
+    <div class="card">
+
+      <h2 style="margin-top:0">Student</h2>
+
+      <label for="gradeSelect">Grade</label>
+
+      <select id="gradeSelect">
+        <option value="">Select grade</option>
+      </select>
+
+
+      <label for="studentSelect">Student</label>
+
+      <select id="studentSelect" disabled>
+        <option value="">Select student</option>
+      </select>
+
+
+      <div class="student-info" id="studentInfo"></div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2 style="margin-top:0">What happened?</h2>
+
+      <div class="event-buttons">
+
+        <button
+          type="button"
+          class="event-btn"
+          id="phoneBtn">
+          📱 Phone
+        </button>
+
+        <button
+          type="button"
+          class="event-btn"
+          id="tardyBtn">
+          ⏰ Tardy
+        </button>
+
+      </div>
+
+
+      <div id="tardyFields">
+
+        <label for="periodSelect">Period</label>
+
+        <select id="periodSelect">
+          <option value="">Select period</option>
+          <option value="1">Period 1</option>
+          <option value="2">Period 2</option>
+          <option value="3">Period 3</option>
+          <option value="4">Period 4</option>
+          <option value="5">Period 5</option>
+          <option value="6">Period 6</option>
+          <option value="7">Period 7</option>
+        </select>
+
+      </div>
+
+
+      <label for="notes">Notes <span class="muted">(optional)</span></label>
+
+      <textarea
+        id="notes"
+        rows="3"
+        placeholder="Optional note"></textarea>
+
+
+      <button
+        class="primary"
+        id="submitBtn"
+        disabled>
+        Submit
+      </button>
+
+
+      <div id="message" class="alert"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+
+<script>
+
+const firebaseConfig = {
+  apiKey:"AIzaSyA7nr506RwbSNZKFGPRKjb_qc_OFpgAhUM",
+  authDomain:"idea-spears.firebaseapp.com",
+  projectId:"idea-spears",
+  storageBucket:"idea-spears.firebasestorage.app",
+  messagingSenderId:"619672486663",
+  appId:"1:619672486663:web:8672bb614d892ea00e7ba2",
+  measurementId:"G-0SCW3PVT1D"
+};
+
+if(!firebase.apps.length){
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+let allStudents = [];
+let selectedStudent = null;
+let selectedEvent = "";
+let currentTeacherId = "";
+let currentTeacherName = "";
+let currentAccessKey = "";
+
+
+/* ==============================
+   URL ACCESS
+============================== */
+
+const params = new URLSearchParams(window.location.search);
+
+currentTeacherId =
+  params.get("id") ||
+  params.get("teacher") ||
+  "";
+
+currentAccessKey =
+  params.get("key") ||
+  "";
+
+
+/* ==============================
+   START
+============================== */
+
+startTracker();
+
+
+async function startTracker(){
+
+  if(!currentTeacherId || !currentAccessKey){
+
+    denyAccess(
+      "This teacher link is incomplete."
+    );
+
+    return;
+  }
+
+
+  try{
+
+    let user = auth.currentUser;
+
+
+    if(!user){
+
+      const result =
+        await auth.signInAnonymously();
+
+      user = result.user;
+    }
+
+
+    await verifyTeacher(user);
+
+
+  }catch(error){
+
+    console.error(error);
+
+    denyAccess(
+      "Unable to verify teacher access."
+    );
+
+  }
+
+}
+
+
+/* ==============================
+   VERIFY TEACHER
+============================== */
+
+async function verifyTeacher(user){
+
+  const accessRef =
+    db.collection("teacherAccess")
+      .doc(currentAccessKey);
+
+  const accessSnap =
+    await accessRef.get();
+
+
+  if(!accessSnap.exists){
+
+    denyAccess("Invalid teacher link.");
+
+    return;
+  }
+
+
+  const access =
+    accessSnap.data();
+
+
+  if(
+    access.active !== true ||
+    access.teacherId !== currentTeacherId
+  ){
+
+    denyAccess("Teacher access denied.");
+
+    return;
+  }
+
+
+  currentTeacherName =
+    access.teacherName ||
+    currentTeacherId;
+
+
+  /*
+    Check whether the anonymous browser
+    session already belongs to another teacher.
+  */
+
+  const sessionRef =
+    db.collection("teacherSessions")
+      .doc(user.uid);
+
+  const sessionSnap =
+    await sessionRef.get();
+
+
+  if(
+    sessionSnap.exists &&
+    sessionSnap.data().teacherId !== currentTeacherId
+  ){
+
+    await auth.signOut();
+
+    const fresh =
+      await auth.signInAnonymously();
+
+    user = fresh.user;
+  }
+
+
+  const finalSessionRef =
+    db.collection("teacherSessions")
+      .doc(user.uid);
+
+  const finalSessionSnap =
+    await finalSessionRef.get();
+
+
+  if(!finalSessionSnap.exists){
+
+    await finalSessionRef.set({
+
+      teacherId:currentTeacherId,
+
+      accessKey:currentAccessKey,
+
+      active:true,
+
+      createdAt:
+        firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+  }
+
+
+  $("teacherDisplay").textContent =
+    currentTeacherName;
+
+  $("loadingCard").style.display =
+    "none";
+
+  $("tracker").style.display =
+    "block";
+
+
+  await loadStudents();
+
+}
+
+
+/* ==============================
+   LOAD STUDENTS
+============================== */
+
+async function loadStudents(){
+
+  try{
+
+    const snapshot =
+      await db.collection("students").get();
+
+
+    allStudents =
+      snapshot.docs
+        .map(doc => doc.data())
+        .filter(student =>
+          student.active !== false
+        );
+
+
+    allStudents.sort((a,b) =>
+      (a.displayName || "")
+        .localeCompare(b.displayName || "")
+    );
+
+
+    populateGrades();
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showMessage(
+      "Unable to load the student roster.",
+      "err"
+    );
+
+  }
+
+}
+
+
+/* ==============================
+   GRADES
+============================== */
+
+function populateGrades(){
+
+  const grades =
+    [...new Set(
+      allStudents
+        .map(student =>
+          String(student.gradeLevel || "").trim()
+        )
+        .filter(Boolean)
+    )];
+
+
+  grades.sort((a,b) =>
+    Number(a) - Number(b)
+  );
+
+
+  $("gradeSelect").innerHTML =
+    `<option value="">Select grade</option>` +
+    grades.map(grade =>
+      `<option value="${escapeHtml(grade)}">
+        Grade ${escapeHtml(grade)}
+      </option>`
+    ).join("");
+
+}
+
+
+/* ==============================
+   STUDENT DROPDOWN
+============================== */
+
+$("gradeSelect").addEventListener(
+  "change",
+  function(){
+
+    const grade = this.value;
+
+    selectedStudent = null;
+
+    $("studentInfo").style.display =
+      "none";
+
+    $("studentSelect").innerHTML =
+      `<option value="">Select student</option>`;
+
+
+    if(!grade){
+
+      $("studentSelect").disabled =
+        true;
+
+      updateSubmitButton();
+
+      return;
+    }
+
+
+    const students =
+      allStudents.filter(student =>
+        String(student.gradeLevel) === grade
+      );
+
+
+    students.forEach(student => {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        student.studentId;
+
+      option.textContent =
+        student.displayName;
+
+      $("studentSelect")
+        .appendChild(option);
+
+    });
+
+
+    $("studentSelect").disabled =
+      false;
+
+    updateSubmitButton();
+
+  }
+);
+
+
+$("studentSelect").addEventListener(
+  "change",
+  function(){
+
+    selectedStudent =
+      allStudents.find(student =>
+        String(student.studentId) ===
+        String(this.value)
+      ) || null;
+
+
+    if(selectedStudent){
+
+      $("studentInfo").innerHTML = `
+        <strong>
+          ${escapeHtml(selectedStudent.displayName)}
+        </strong>
+        <br>
+        Grade ${escapeHtml(selectedStudent.gradeLevel)}
+        · Homeroom:
+        ${escapeHtml(selectedStudent.homeRoom || "—")}
+      `;
+
+      $("studentInfo").style.display =
+        "block";
+
+    }else{
+
+      $("studentInfo").style.display =
+        "none";
+
+    }
+
+
+    updateSubmitButton();
+
+  }
+);
+
+
+/* ==============================
+   EVENT TYPE
+============================== */
+
+$("phoneBtn").onclick = () => {
+
+  selectedEvent = "phone";
+
+  $("phoneBtn").classList.add("active");
+  $("tardyBtn").classList.remove("active");
+
+  $("tardyFields").style.display =
+    "none";
+
+  $("periodSelect").value = "";
+
+  updateSubmitButton();
+
+};
+
+
+$("tardyBtn").onclick = () => {
+
+  selectedEvent = "tardy";
+
+  $("tardyBtn").classList.add("active");
+  $("phoneBtn").classList.remove("active");
+
+  $("tardyFields").style.display =
+    "block";
+
+  updateSubmitButton();
+
+};
+
+
+$("periodSelect").addEventListener(
+  "change",
+  updateSubmitButton
+);
+
+
+/* ==============================
+   SUBMIT ENABLE / DISABLE
+============================== */
+
+function updateSubmitButton(){
+
+  let ready =
+    selectedStudent &&
+    selectedEvent;
+
+
+  if(selectedEvent === "tardy"){
+
+    ready =
+      ready &&
+      $("periodSelect").value;
+
+  }
+
+
+  $("submitBtn").disabled =
+    !ready;
+
+}
+
+
+/* ==============================
+   SUBMIT
+============================== */
+
+$("submitBtn").onclick =
+async function(){
+
+  if(!selectedStudent){
+    return;
+  }
+
+
+  $("submitBtn").disabled = true;
+
+
+  showMessage(
+    "Saving...",
+    "info"
+  );
+
+
+  try{
+
+    if(selectedEvent === "tardy"){
+
+      await saveTardy();
+
+    }else if(selectedEvent === "phone"){
+
+      await savePhone();
+
+    }
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showMessage(
+      "Unable to save: " + error.message,
+      "err"
+    );
+
+    updateSubmitButton();
+
+  }
+
+};
+
+
+/* ==============================
+   SAVE TARDY
+============================== */
+
+async function saveTardy(){
+
+  const period =
+    $("periodSelect").value;
+
+
+  await db.collection("tardies").add({
+
+    studentId:
+      selectedStudent.studentId,
+
+    studentName:
+      selectedStudent.displayName,
+
+    gradeLevel:
+      selectedStudent.gradeLevel,
+
+    homeRoom:
+      selectedStudent.homeRoom || "",
+
+    teacherId:
+      currentTeacherId,
+
+    teacherName:
+      currentTeacherName,
+
+    period:
+      period,
+
+    notes:
+      $("notes").value.trim(),
+
+    eventDate:
+      new Date().toISOString()
+        .slice(0,10),
+
+    createdAt:
+      firebase.firestore.FieldValue
+        .serverTimestamp()
+
+  });
+
+
+  showMessage(
+    "✓ Tardy recorded for " +
+    selectedStudent.displayName +
+    ".",
+    "ok"
+  );
+
+
+  resetForm();
+
+}
+
+
+/* ==============================
+   SAVE PHONE
+============================== */
+
+async function savePhone(){
+
+  /*
+    Generate the next sequential
+    phone tracking number.
+  */
+
+  const counterRef =
+    db.collection("systemCounters")
+      .doc("phoneTracking");
+
+
+  const trackingNumber =
+    await db.runTransaction(
+      async transaction => {
+
+        const counterSnap =
+          await transaction.get(counterRef);
+
+
+        let nextNumber = 1;
+
+
+        if(counterSnap.exists){
+
+          nextNumber =
+            Number(
+              counterSnap.data().lastNumber || 0
+            ) + 1;
+
+        }
+
+
+        transaction.set(
+          counterRef,
+          {
+            lastNumber:nextNumber
+          },
+          {merge:true}
+        );
+
+
+        return (
+          "P-" +
+          String(nextNumber)
+            .padStart(5,"0")
+        );
+
+      }
+    );
+
+
+  /*
+    Count previous confiscations
+    for this student.
+  */
+
+  const previous =
+    await db.collection("phoneConfiscations")
+      .where(
+        "studentId",
+        "==",
+        selectedStudent.studentId
+      )
+      .get();
+
+
+  const occurrence =
+    previous.size + 1;
+
+
+  const consequence =
+    getPhoneConsequence(occurrence);
+
+
+  await db.collection("phoneConfiscations").add({
+
+    trackingNumber:
+      trackingNumber,
+
+    studentId:
+      selectedStudent.studentId,
+
+    studentName:
+      selectedStudent.displayName,
+
+    gradeLevel:
+      selectedStudent.gradeLevel,
+
+    homeRoom:
+      selectedStudent.homeRoom || "",
+
+    teacherId:
+      currentTeacherId,
+
+    teacherName:
+      currentTeacherName,
+
+    occurrence:
+      occurrence,
+
+    consequence:
+      consequence,
+
+    status:
+      "Held by Front Office",
+
+    notes:
+      $("notes").value.trim(),
+
+    eventDate:
+      new Date().toISOString()
+        .slice(0,10),
+
+    createdAt:
+      firebase.firestore.FieldValue
+        .serverTimestamp()
+
+  });
+
+
+  showMessage(
+    "✓ Phone recorded.\n\n" +
+    "Tracking Number: " +
+    trackingNumber +
+    "\n" +
+    "Occurrence: #" +
+    occurrence +
+    "\n" +
+    "Consequence: " +
+    consequence,
+    "ok"
+  );
+
+
+  resetForm(false);
+
+}
+
+
+/* ==============================
+   PHONE CONSEQUENCE
+============================== */
+
+function getPhoneConsequence(number){
+
+  if(number === 1){
+    return "Return at end of day";
+  }
+
+  if(number === 2){
+    return "Parent/guardian pickup";
+  }
+
+  if(number === 3){
+    return "Parent meeting + daily phone turn-in to AP";
+  }
+
+  return "Administrative review / campus consequence";
+
+}
+
+
+/* ==============================
+   RESET
+============================== */
+
+function resetForm(clearMessage = true){
+
+  selectedStudent = null;
+  selectedEvent = "";
+
+  $("gradeSelect").value = "";
+
+  $("studentSelect").innerHTML =
+    `<option value="">Select student</option>`;
+
+  $("studentSelect").disabled = true;
+
+  $("studentInfo").style.display =
+    "none";
+
+  $("phoneBtn").classList.remove(
+    "active"
+  );
+
+  $("tardyBtn").classList.remove(
+    "active"
+  );
+
+  $("tardyFields").style.display =
+    "none";
+
+  $("periodSelect").value = "";
+
+  $("notes").value = "";
+
+  $("submitBtn").disabled = true;
+
+}
+
+
+/* ==============================
+   MESSAGES
+============================== */
+
+function showMessage(text,type){
+
+  const element =
+    $("message");
+
+  element.textContent =
+    text;
+
+  element.style.whiteSpace =
+    "pre-line";
+
+  element.className =
+    "alert show " + type;
+
+}
+
+
+/* ==============================
+   ACCESS DENIED
+============================== */
+
+function denyAccess(message){
+
+  $("loadingCard").innerHTML =
+    `<strong>Access Denied</strong>
+     <p>${escapeHtml(message)}</p>`;
+
+}
+
+
+/* ==============================
+   ESCAPE HTML
+============================== */
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      character => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[character])
+    );
+
+}
+
+</script>
+
+</body>
+</html>
