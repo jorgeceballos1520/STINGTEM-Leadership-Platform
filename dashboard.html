@@ -160,6 +160,12 @@ const FIREBASE_CONFIG={
 if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 const fbAuth=firebase.auth();
 const fbDb=firebase.firestore();
+// Use short-lived responses to avoid stalled streaming connections.
+// Configure before the first Firestore operation.
+fbDb.settings({
+  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false
+});
 const fbProvider=new firebase.auth.GoogleAuthProvider();
 let firebaseUser=null;
 
