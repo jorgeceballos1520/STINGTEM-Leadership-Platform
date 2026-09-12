@@ -285,13 +285,13 @@ const $ = id => document.getElementById(id);
    SHARED HS ACCESS KEY
 ============================== */
 
-const SHARED_HS_KEY = "HS-TRACKER-2026";
-
 const params =
   new URLSearchParams(window.location.search);
 
 const suppliedKey =
   params.get("key") || "";
+
+const HS_TEACHER_ID = "HS_TRACKER";
 
 
 /* ==============================
@@ -373,10 +373,10 @@ start();
 
 async function start(){
 
-  if(suppliedKey !== SHARED_HS_KEY){
+  if(!suppliedKey){
 
     denyAccess(
-      "This High School tracker link is not valid."
+      "This High School tracker link is incomplete."
     );
 
     return;
@@ -384,16 +384,113 @@ async function start(){
 
   try{
 
-    if(!auth.currentUser){
-      await auth.signInAnonymously();
+    let user = auth.currentUser;
+
+    if(!user){
+
+      const result =
+        await auth.signInAnonymously();
+
+      user = result.user;
     }
 
+
+    // Verify shared HS access key
+    const accessRef =
+      db.collection("teacherAccess")
+        .doc(suppliedKey);
+
+    const accessSnap =
+      await accessRef.get();
+
+
+    if(!accessSnap.exists){
+
+      denyAccess(
+        "This High School tracker link is not valid."
+      );
+
+      return;
+    }
+
+
+    const access =
+      accessSnap.data();
+
+
+    if(
+      access.active !== true ||
+      access.teacherId !== HS_TEACHER_ID
+    ){
+
+      denyAccess(
+        "High School tracker access is not active."
+      );
+
+      return;
+    }
+
+
+    // Look for an existing session
+    let sessionRef =
+      db.collection("teacherSessions")
+        .doc(user.uid);
+
+    let sessionSnap =
+      await sessionRef.get();
+
+
+    // If this browser was previously being used
+    // for a different teacher portal, start fresh
+    if(
+      sessionSnap.exists &&
+      sessionSnap.data().teacherId !== HS_TEACHER_ID
+    ){
+
+      await auth.signOut();
+
+      const fresh =
+        await auth.signInAnonymously();
+
+      user = fresh.user;
+
+      sessionRef =
+        db.collection("teacherSessions")
+          .doc(user.uid);
+
+      sessionSnap =
+        await sessionRef.get();
+    }
+
+
+    // Create verified HS tracker session
+    if(!sessionSnap.exists){
+
+      await sessionRef.set({
+
+        teacherId: HS_TEACHER_ID,
+
+        accessKey: suppliedKey,
+
+        active: true,
+
+        createdAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      });
+
+    }
+
+
+    // Load teacher names and student roster
     populateTeachers();
 
     await loadStudents();
 
     $("loadingCard").style.display = "none";
     $("tracker").style.display = "block";
+
 
   }catch(error){
 
@@ -406,7 +503,6 @@ async function start(){
   }
 
 }
-
 
 /* ==============================
    TEACHERS
