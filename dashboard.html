@@ -1398,13 +1398,72 @@ document.getElementById("oneDriveSyncBtn").addEventListener("click",openOneDrive
 
 document.getElementById("formImportBtn").addEventListener("click",openFormImport);
 
-(async function init(){
-  await loadAll();
-  ready=true;
-  render();
+function showDashboardSignIn(error) {
+  const main = document.getElementById("main");
+  main.innerHTML = `
+    <div class="panel">
+      <h2>Sign in to your dashboard</h2>
+      <p>Use your administrator Google account.</p>
+      <p id="dashboardLoginError" class="alert" hidden></p>
+      <button class="btn btn-primary" id="dashboardLoginButton">
+        Sign in with Google
+      </button>
+    </div>`;
+
+  if (error) {
+    const message = document.getElementById("dashboardLoginError");
+    message.hidden = false;
+    message.textContent = (error.code || "Dashboard error") + ": " +
+      (error.message || "Please try again.");
+  }
+
+  document.getElementById("dashboardLoginButton").onclick = async function () {
+    this.disabled = true;
+    this.textContent = "Signing in…";
+    try {
+      fbProvider.setCustomParameters({ prompt: "select_account" });
+      const result = await fbAuth.signInWithPopup(fbProvider);
+      firebaseUser = result.user;
+      await openSignedInDashboard();
+    } catch (error) {
+      showDashboardSignIn(error);
+    }
+  };
+}
+
+async function openSignedInDashboard() {
+  document.getElementById("main").innerHTML =
+    '<div class="loading">Loading dashboard data…</div>';
+  try {
+    await loadAll();
+    ready = true;
+    render();
+  } catch (error) {
+    showDashboardSignIn(error);
+  }
+}
+
+(async function init() {
+  try {
+    const user = await new Promise((resolve, reject) => {
+      const unsubscribe = fbAuth.onAuthStateChanged(user => {
+        unsubscribe();
+        resolve(user);
+      }, reject);
+    });
+    if (user && !user.isAnonymous) {
+      firebaseUser = user;
+      await openSignedInDashboard();
+    } else {
+      showDashboardSignIn();
+    }
+  } catch (error) {
+    showDashboardSignIn(error);
+  }
 })();
+
 </script>
-</body>
+
   <style>
 .sa-toolbar {
   display: flex;
@@ -2295,4 +2354,5 @@ document.getElementById("formImportBtn").addEventListener("click",openFormImport
   });
 })();
 </script>
+</body>
 </html>
