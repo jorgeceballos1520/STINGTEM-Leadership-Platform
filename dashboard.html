@@ -1746,6 +1746,11 @@ async function openSignedInDashboard() {
       consequence: pick(data, "consequence", "assignedConsequence"),
       status: pick(data, "status", "phoneStatus"),
       period: pick(data, "period", "tardyPeriod"),
+      returnedAt: parseDate(data.returnedAt),
+      pickupName: pick(data, "pickupName"),
+      pickupType: pick(data, "pickupType"),
+      returnedByEmail: pick(data, "returnedByEmail"),
+      returnNotes: pick(data, "returnNotes"),
       notes: pick(data, "notes"),
       date,
       day: date ? dayKey(date) : "",
@@ -1842,6 +1847,7 @@ async function openSignedInDashboard() {
         record.consequence,
         record.status,
         record.period,
+        record.pickupName, record.pickupType, record.returnNotes, record.returnedByEmail,
         record.notes,
         record.day
       ].join(" ").toLowerCase();
@@ -1883,6 +1889,103 @@ async function openSignedInDashboard() {
         </div>
       </div>
     `;
+  }
+
+  function phoneReturned(record) {
+    return !!record.returnedAt || ["returned", "picked up", "released"].includes(
+      (record.status || "").toLowerCase().replace(/[_-]/g, " ").trim()
+    );
+  }
+
+  async function savePhoneReturn(id, details) {
+    if (!allowed()) throw new Error("Administrator sign-in is required.");
+    const user = fbAuth.currentUser;
+    const name = details.name.trim();
+    if (!name || name.length > 120) throw new Error("Enter the pickup person's name (up to 120 characters).");
+    if (!["Student", "Parent/guardian", "Other authorized person"].includes(details.type)) throw new Error("Select who picked up the phone.");
+    if (details.notes.length > 1000) throw new Error("Notes must be 1,000 characters or fewer.");
+    const reference = fbDb.collection("phoneConfiscations").doc(id);
+    await fbDb.runTransaction(async transaction => {
+      const snapshot = await transaction.get(reference);
+      if (!snapshot.exists) throw new Error("This phone record no longer exists. Refresh the history.");
+      if (phoneReturned(normalize(snapshot))) throw new Error("This phone is already marked returned. Refresh the history to see its return details.");
+      if (!allowed() || fbAuth.currentUser.uid !== user.uid) throw new Error("Your sign-in changed. Close this form and sign in again.");
+      transaction.update(reference, {
+        status: "Returned",
+        returnedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        returnedByUid: user.uid,
+        returnedByEmail: user.email,
+        pickupType: details.type,
+        pickupName: name,
+        returnNotes: details.notes.trim()
+      });
+    });
+  }
+
+  function openPhoneReturn(id) {
+    if (!allowed()) return;
+    const record = report.records.phoneConfiscations.find(record => record.id === id);
+    if (!record || phoneReturned(record)) return;
+    const overlay = modal(`
+      <h3>Mark phone returned</h3>
+      <p><strong>${escapeHTML(record.tracking || "Phone record")}</strong> · ${escapeHTML(record.student)}</p>
+      <p>Recorded consequence: <strong>${escapeHTML(record.consequence || "Not recorded")}</strong></p>
+      <p class="sub">Confirm the pickup meets the recorded consequence before saving. The return time and your administrator account will be recorded automatically.</p>
+      <form id="sa-return-form">
+        <div class="field"><label for="sa-pickup-type">Picked up by</label>
+          <select id="sa-pickup-type" required><option value="">Select…</option><option>Student</option><option>Parent/guardian</option><option>Other authorized person</option></select></div>
+        <div class="field"><label for="sa-pickup-name">Person’s name</label><input id="sa-pickup-name" required maxlength="120" autocomplete="off"></div>
+        <div class="field"><label for="sa-return-notes">Return notes (optional)</label><textarea id="sa-return-notes" maxlength="1000"></textarea></div>
+        <p id="sa-return-message" role="status" aria-live="polite"></p>
+        <div class="modal-actions"><button type="button" class="btn" id="sa-return-cancel">Cancel</button><button type="submit" class="btn btn-primary" id="sa-return-save">Save return</button></div>
+      </form>`);
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Mark phone returned");
+    // Keep the form open until the write is acknowledged; do not queue a duplicate.
+    overlay.onclick = null;
+    const cancel = overlay.querySelector("#sa-return-cancel");
+    const save = overlay.querySelector("#sa-return-save");
+    const message = overlay.querySelector("#sa-return-message");
+    cancel.onclick = () => overlay.remove();
+    overlay.querySelector("#sa-pickup-type").focus();
+    overlay.querySelector("form").onsubmit = async event => {
+      event.preventDefault();
+      if (save.disabled) return;
+      save.disabled = true; cancel.disabled = true;
+      message.textContent = "Saving return…";
+      const timer = setTimeout(() => { message.textContent = "Still waiting for confirmation. Keep this form open; do not submit the return again."; }, 15000);
+      try {
+        await savePhoneReturn(id, {
+          type: overlay.querySelector("#sa-pickup-type").value,
+          name: overlay.querySelector("#sa-pickup-name").value,
+          notes: overlay.querySelector("#sa-return-notes").value
+        });
+        // Reflect the acknowledged status immediately, then retrieve the server timestamp.
+        record.status = "Returned";
+        clearTimeout(timer);
+        message.textContent = "Return saved. Refreshing history…";
+        await loadHistories();
+        overlay.remove();
+      } catch (error) {
+        message.textContent = error.code === "permission-denied"
+          ? "Return could not be saved: this account does not have update permission for phone records."
+          : "Return could not be completed: " + error.message;
+      } finally {
+        clearTimeout(timer);
+        save.disabled = false; cancel.disabled = false;
+      }
+    };
+  }
+
+  function phoneReturnCell(record) {
+    if (!phoneReturned(record)) return `<button class="btn btn-small no-print" data-sa-return="${escapeHTML(record.id)}">Mark Returned</button>`;
+    return `<strong>Returned</strong>
+      <div>${escapeHTML(record.pickupName || "Pickup name not recorded")}</div>
+      <div class="meta">${escapeHTML(record.pickupType || "")}</div>
+      <div class="meta">${escapeHTML(record.returnedAt ? record.returnedAt.toLocaleString("en-US") : "Return time not recorded")}</div>
+      <div class="meta">Recorded by: ${escapeHTML(record.returnedByEmail || "Not recorded")}</div>
+      <div>${escapeHTML(record.returnNotes || "")}</div>`;
   }
 
   function resultsHTML() {
@@ -1986,7 +2089,7 @@ async function openSignedInDashboard() {
     const columns = phone
       ? [
           "Tracking number", "Student", "Grade", "Teacher",
-          "Occurrence", "Consequence", "Status", "Date", "Notes"
+          "Occurrence", "Consequence", "Status", "Date", "Notes", "Return / pickup"
         ]
       : [
           "Student", "Grade", "Teacher", "Period",
@@ -2029,6 +2132,8 @@ async function openSignedInDashboard() {
         ),
         escapeHTML(record.notes || "—")
       );
+
+      if (phone) cells.push(phoneReturnCell(record));
 
       return `<tr>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`;
     }).join("");
@@ -2264,6 +2369,9 @@ async function openSignedInDashboard() {
     if (!allowed()) return;
 
     function bindPagination() {
+      document.querySelectorAll("[data-sa-return]").forEach(button => {
+        button.onclick = () => openPhoneReturn(button.dataset.saReturn);
+      });
       document.querySelectorAll("[data-sa-page]").forEach(button => {
         button.onclick = () => {
           report.page += Number(button.dataset.saPage);
