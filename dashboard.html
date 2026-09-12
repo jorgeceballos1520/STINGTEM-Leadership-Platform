@@ -1543,6 +1543,7 @@ async function openSignedInDashboard() {
   background: white;
   color: var(--navy);
 }
+main:has(#sa-results) { min-width: 0; }
 .sa-scroll {
   overflow-x: auto;
 }
@@ -2088,8 +2089,8 @@ async function openSignedInDashboard() {
 
     const columns = phone
       ? [
-          "Tracking number", "Student", "Grade", "Teacher",
-          "Occurrence", "Consequence", "Status", "Date", "Notes", "Return / pickup"
+          "Return / pickup", "Tracking number", "Student", "Grade", "Teacher",
+          "Occurrence", "Consequence", "Status", "Date", "Notes"
         ]
       : [
           "Student", "Grade", "Teacher", "Period",
@@ -2133,7 +2134,7 @@ async function openSignedInDashboard() {
         escapeHTML(record.notes || "—")
       );
 
-      if (phone) cells.push(phoneReturnCell(record));
+      if (phone) cells.unshift(phoneReturnCell(record));
 
       return `<tr>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`;
     }).join("");
