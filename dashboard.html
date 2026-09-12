@@ -1405,4 +1405,852 @@ document.getElementById("formImportBtn").addEventListener("click",openFormImport
 })();
 </script>
 </body>
+  <style>
+.sa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sa-filters,
+.sa-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sa-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.sa-field input,
+.sa-field select {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--navy);
+}
+.sa-scroll {
+  overflow-x: auto;
+}
+.sa-scroll table {
+  min-width: 1000px;
+}
+.sa-scroll td {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+.sa-breakdowns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sa-breakdown-list {
+  max-height: 280px;
+  overflow: auto;
+}
+.sa-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sa-toolbar button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+@media (max-width: 900px) {
+  .sa-filters,
+  .sa-metrics,
+  .sa-breakdowns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .sa-filters,
+  .sa-metrics,
+  .sa-breakdowns {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+/*
+ * Student Accountability — administrator reporting.
+ * Uses the existing dashboard Firebase connection and sign-in.
+ * Reads records only; does not modify student or instructional data.
+ */
+(function () {
+  "use strict";
+
+  // Avoid adding a second copy if this area is already installed.
+  if (
+    document.getElementById("sa-nav") ||
+    document.getElementById("sa-admin-nav")
+  ) return;
+
+  const ADMIN_EMAIL = "jorge.ceballos1520@gmail.com";
+  const PAGE_SIZE = 50;
+
+  const report = {
+    tab: "phoneConfiscations",
+    records: {
+      phoneConfiscations: [],
+      tardies: []
+    },
+    errors: {},
+    loading: false,
+    loaded: false,
+    page: 1,
+    request: 0,
+    filters: {
+      search: "",
+      grade: "",
+      status: "",
+      period: "",
+      from: "",
+      to: ""
+    }
+  };
+
+  function allowed() {
+    const user = fbAuth.currentUser;
+    const teacherView =
+      !!new URLSearchParams(location.search).get("id");
+
+    return (
+      !teacherView &&
+      !!user &&
+      !user.isAnonymous &&
+      (user.email || "").toLowerCase() === ADMIN_EMAIL
+    );
+  }
+
+  function escapeHTML(value) {
+    return String(value == null ? "" : value).replace(
+      /[&<>"']/g,
+      character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character])
+    );
+  }
+
+  function pick(record, ...keys) {
+    for (const key of keys) {
+      const value = record[key];
+      if (
+        value != null &&
+        typeof value !== "object" &&
+        String(value).trim() !== ""
+      ) {
+        return String(value);
+      }
+    }
+    return "";
+  }
+
+  function dayKey(date) {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0")
+    ].join("-");
+  }
+
+  function parseDate(value) {
+    if (value == null || value === "") return null;
+
+    try {
+      let date;
+
+      if (typeof value.toDate === "function") {
+        date = value.toDate();
+      } else if (
+        typeof value === "object" &&
+        typeof value.seconds === "number"
+      ) {
+        date = new Date(value.seconds * 1000);
+      } else if (
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ) {
+        date = new Date(value + "T00:00:00");
+        if (
+          !Number.isFinite(date.getTime()) ||
+          dayKey(date) !== value
+        ) return null;
+      } else {
+        date = new Date(value);
+      }
+
+      return Number.isFinite(date.getTime()) ? date : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function normalize(document) {
+    const data = document.data();
+    let date = null;
+
+    for (const field of [
+      "date",
+      "confiscationDate",
+      "tardyDate",
+      "incidentDate",
+      "timestamp",
+      "createdAt",
+      "submittedAt"
+    ]) {
+      date = parseDate(data[field]);
+      if (date) break;
+    }
+
+    const student = pick(
+      data, "studentName", "studentFullName", "student"
+    );
+    const studentId = pick(data, "studentId", "studentID");
+    const grade = pick(
+      data, "grade", "studentGrade", "gradeLevel"
+    );
+
+    return {
+      id: document.id,
+      student,
+      studentId,
+      grade,
+      teacher: pick(data, "teacherName", "staffName", "teacher"),
+      tracking: pick(data, "trackingNumber", "phoneTrackingNumber"),
+      occurrence: pick(
+        data, "occurrence", "occurrenceNumber", "offenseNumber"
+      ),
+      consequence: pick(data, "consequence", "assignedConsequence"),
+      status: pick(data, "status", "phoneStatus"),
+      period: pick(data, "period", "tardyPeriod"),
+      notes: pick(data, "notes"),
+      date,
+      day: date ? dayKey(date) : "",
+      studentKey: studentId
+        ? "id:" + studentId
+        : student
+          ? "name:" + student.trim().toLowerCase() + "|" + grade
+          : ""
+    };
+  }
+
+  async function loadHistories() {
+    if (!allowed() || report.loading) return;
+
+    const request = ++report.request;
+    const userId = fbAuth.currentUser.uid;
+
+    report.loading = true;
+    report.errors = {};
+
+    if (view.screen === "accountability") render();
+
+    await Promise.all(
+      ["phoneConfiscations", "tardies"].map(async collection => {
+        try {
+          const snapshot = await fbDb
+            .collection(collection)
+            .get({ source: "server" });
+
+          if (
+            request !== report.request ||
+            !allowed() ||
+            fbAuth.currentUser.uid !== userId
+          ) return;
+
+          report.records[collection] = snapshot.docs
+            .map(normalize)
+            .sort((a, b) => {
+              const aTime = a.date ? a.date.getTime() : -Infinity;
+              const bTime = b.date ? b.date.getTime() : -Infinity;
+              return (bTime - aTime) || a.id.localeCompare(b.id);
+            });
+        } catch (error) {
+          if (request !== report.request) return;
+
+          report.records[collection] = [];
+          report.errors[collection] =
+            error.code === "permission-denied"
+              ? "Your account does not have permission to read this history."
+              : "This history could not be loaded. Check your connection and refresh.";
+        }
+      })
+    );
+
+    if (request !== report.request) return;
+
+    report.loading = false;
+    report.loaded = true;
+
+    if (view.screen === "accountability") render();
+  }
+
+  function filteredRecords() {
+    const filters = report.filters;
+    const terms = filters.search
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    return report.records[report.tab].filter(record => {
+      if (filters.grade && record.grade !== filters.grade) return false;
+      if (filters.status && record.status !== filters.status) return false;
+      if (filters.period && record.period !== filters.period) return false;
+
+      if (
+        filters.from &&
+        (!record.day || record.day < filters.from)
+      ) return false;
+
+      if (
+        filters.to &&
+        (!record.day || record.day > filters.to)
+      ) return false;
+
+      const searchable = [
+        record.student,
+        record.studentId,
+        record.grade,
+        record.teacher,
+        record.tracking,
+        record.occurrence,
+        record.consequence,
+        record.status,
+        record.period,
+        record.notes,
+        record.day
+      ].join(" ").toLowerCase();
+
+      return terms.every(term => searchable.includes(term));
+    });
+  }
+
+  function counts(records, field) {
+    const totals = new Map();
+
+    records.forEach(record => {
+      const value = record[field] || "Not recorded";
+      totals.set(value, (totals.get(value) || 0) + 1);
+    });
+
+    return [...totals.entries()].sort(
+      (a, b) =>
+        b[1] - a[1] ||
+        a[0].localeCompare(b[0], undefined, { numeric: true })
+    );
+  }
+
+  function breakdown(title, entries) {
+    return `
+      <div class="panel">
+        <h3>${escapeHTML(title)}</h3>
+        <div class="sa-breakdown-list">
+          ${
+            entries.length
+              ? entries.map(([label, total]) => `
+                  <div class="sa-breakdown-row">
+                    <span>${escapeHTML(label)}</span>
+                    <strong>${total}</strong>
+                  </div>
+                `).join("")
+              : '<p class="muted">No records.</p>'
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  function resultsHTML() {
+    if (report.loading) {
+      return `
+        <div class="loading" role="status">
+          Loading accountability histories…
+        </div>
+      `;
+    }
+
+    if (report.errors[report.tab]) {
+      return `
+        <div class="alert" role="alert">
+          ${escapeHTML(report.errors[report.tab])}
+          Use Refresh histories to retry.
+        </div>
+      `;
+    }
+
+    const phone = report.tab === "phoneConfiscations";
+    const records = filteredRecords();
+    const studentCounts = counts(
+      records.filter(record => record.studentKey),
+      "studentKey"
+    );
+
+    const heldStatuses = [
+      "held",
+      "confiscated",
+      "in custody",
+      "pending pickup",
+      "awaiting pickup",
+      "in office"
+    ];
+
+    const held = records.filter(record =>
+      heldStatuses.includes(
+        record.status.toLowerCase().replace(/[_-]/g, " ").trim()
+      )
+    ).length;
+
+    const now = new Date();
+    const today = dayKey(now);
+
+    const monday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    monday.setDate(
+      monday.getDate() - ((monday.getDay() + 6) % 7)
+    );
+
+    const previousMonday = new Date(monday);
+    previousMonday.setDate(previousMonday.getDate() - 7);
+
+    const previousCutoff = new Date(now);
+    previousCutoff.setDate(previousCutoff.getDate() - 7);
+
+    const thisWeek = records.filter(record =>
+      record.date &&
+      record.date >= monday &&
+      record.date <= now
+    ).length;
+
+    const lastWeek = records.filter(record =>
+      record.date &&
+      record.date >= previousMonday &&
+      record.date <= previousCutoff
+    ).length;
+
+    const difference = thisWeek - lastWeek;
+
+    const metrics = [
+      [records.length, phone ? "Phone confiscations" : "Tardies"],
+      [studentCounts.length, "Unique students"],
+      [
+        studentCounts.filter(entry => entry[1] >= 2).length,
+        "Students with 2+ records"
+      ],
+      [
+        phone
+          ? held
+          : records.filter(record => record.day === today).length,
+        phone ? "Phones marked held" : "Tardies today"
+      ]
+    ];
+
+    const totalPages = Math.max(
+      1,
+      Math.ceil(records.length / PAGE_SIZE)
+    );
+    report.page = Math.min(report.page, totalPages);
+
+    const visible = records.slice(
+      (report.page - 1) * PAGE_SIZE,
+      report.page * PAGE_SIZE
+    );
+
+    const columns = phone
+      ? [
+          "Tracking number", "Student", "Grade", "Teacher",
+          "Occurrence", "Consequence", "Status", "Date", "Notes"
+        ]
+      : [
+          "Student", "Grade", "Teacher", "Period",
+          "Occurrence", "Consequence", "Status", "Date", "Notes"
+        ];
+
+    const tableRows = visible.map(record => {
+      const student = `
+        ${escapeHTML(record.student || "Not recorded")}
+        <div class="meta">
+          ${escapeHTML(record.studentId || "No student ID")}
+        </div>
+      `;
+
+      const cells = phone
+        ? [
+            escapeHTML(record.tracking || "—"),
+            student,
+            escapeHTML(record.grade || "—"),
+            escapeHTML(record.teacher || "—"),
+            escapeHTML(record.occurrence || "—"),
+            escapeHTML(record.consequence || "—"),
+            escapeHTML(record.status || "Not recorded")
+          ]
+        : [
+            student,
+            escapeHTML(record.grade || "—"),
+            escapeHTML(record.teacher || "—"),
+            escapeHTML(record.period || "—"),
+            escapeHTML(record.occurrence || "—"),
+            escapeHTML(record.consequence || "—"),
+            escapeHTML(record.status || "Not recorded")
+          ];
+
+      cells.push(
+        escapeHTML(
+          record.date
+            ? record.date.toLocaleDateString("en-US")
+            : "Not recorded"
+        ),
+        escapeHTML(record.notes || "—")
+      );
+
+      return `<tr>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`;
+    }).join("");
+
+    const occurrenceRecords = records.map(record => ({
+      ...record,
+      occurrence:
+        /^\d+$/.test(record.occurrence) &&
+        Number(record.occurrence) >= 4
+          ? "4+"
+          : record.occurrence
+    }));
+
+    return `
+      <p class="sub">
+        All metrics reflect your current filters.
+        ${records.filter(record => !record.date).length}
+        records have no usable date and are excluded from
+        date filters and weekly comparisons.
+      </p>
+
+      <div class="sa-metrics">
+        ${metrics.map(([total, label]) => `
+          <div class="stat">
+            <b>${total}</b>
+            <span>${escapeHTML(label)}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="panel">
+        <h3>Week-to-date comparison</h3>
+        <p>
+          <strong>${thisWeek}</strong> this week ·
+          <strong>${lastWeek}</strong> last week through
+          the same weekday and time ·
+          <strong>${difference > 0 ? "+" : ""}${difference}</strong>
+          records
+        </p>
+        <p class="sub">
+          Weeks start Monday. Dates use your browser’s local time.
+          Unique and repeat counts use student ID, or name + grade
+          when an ID is missing.
+          ${
+            phone
+              ? "The held count includes explicitly recorded held or pending-pickup statuses. Missing or other statuses are not assumed held."
+              : ""
+          }
+        </p>
+      </div>
+
+      <div class="sa-breakdowns">
+        ${breakdown("By grade", counts(records, "grade"))}
+        ${
+          phone
+            ? breakdown(
+                "Recorded occurrence",
+                counts(occurrenceRecords, "occurrence")
+              )
+            : breakdown("By period", counts(records, "period"))
+        }
+      </div>
+
+      <div class="panel">
+        <h3>${phone ? "Phone confiscation" : "Tardy"} history</h3>
+
+        <p class="sub" role="status">
+          ${records.length} matching records ·
+          Page ${report.page} of ${totalPages}
+        </p>
+
+        <div
+          class="sa-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Scrollable student accountability history"
+        >
+          <table>
+            <thead>
+              <tr>
+                ${columns.map(column =>
+                  `<th scope="col">${column}</th>`
+                ).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                tableRows ||
+                `<tr>
+                  <td colspan="${columns.length}" class="empty">
+                    ${
+                      report.records[report.tab].length
+                        ? "No records match these filters."
+                        : "No records have been recorded yet."
+                    }
+                  </td>
+                </tr>`
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="sa-toolbar no-print" style="margin-top:16px">
+          <button
+            class="btn"
+            data-sa-page="-1"
+            ${report.page <= 1 ? "disabled" : ""}
+          >Previous</button>
+          <button
+            class="btn"
+            data-sa-page="1"
+            ${report.page >= totalPages ? "disabled" : ""}
+          >Next</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function selectHTML(field, label, allLabel) {
+    const values = [...new Set([
+      ...report.records[report.tab].map(record => record[field]),
+      report.filters[field]
+    ])]
+      .filter(Boolean)
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      );
+
+    return `
+      <div class="sa-field">
+        <label for="sa-filter-${field}">${label}</label>
+        <select id="sa-filter-${field}" data-sa-filter="${field}">
+          <option value="">${allLabel}</option>
+          ${values.map(value => `
+            <option
+              value="${escapeHTML(value)}"
+              ${report.filters[field] === value ? "selected" : ""}
+            >${escapeHTML(value)}</option>
+          `).join("")}
+        </select>
+      </div>
+    `;
+  }
+
+  function pageHTML() {
+    if (!allowed()) {
+      return `
+        <div class="panel">
+          Student Accountability is available to the administrator.
+        </div>
+      `;
+    }
+
+    const phone = report.tab === "phoneConfiscations";
+
+    return `
+      <div class="page-head">
+        <div>
+          <h2 class="serif">Student Accountability</h2>
+          <div class="sub">
+            Administrator · Phone Confiscations &amp; Tardies
+          </div>
+        </div>
+        <button
+          class="btn btn-primary no-print"
+          id="sa-refresh"
+          ${report.loading ? "disabled" : ""}
+        >Refresh histories</button>
+      </div>
+
+      <div class="sa-toolbar no-print">
+        <button
+          class="btn ${phone ? "btn-primary" : ""}"
+          data-sa-tab="phoneConfiscations"
+          aria-pressed="${phone}"
+        >Phone Confiscations</button>
+        <button
+          class="btn ${!phone ? "btn-primary" : ""}"
+          data-sa-tab="tardies"
+          aria-pressed="${!phone}"
+        >Tardies</button>
+      </div>
+
+      <div class="panel no-print">
+        <div class="sa-field" style="margin-bottom:14px">
+          <label for="sa-filter-search">Search history</label>
+          <input
+            id="sa-filter-search"
+            data-sa-filter="search"
+            type="search"
+            value="${escapeHTML(report.filters.search)}"
+            placeholder="Student, ID, tracking number, teacher, consequence, or notes"
+          >
+        </div>
+
+        <div class="sa-filters">
+          ${selectHTML("grade", "Grade", "All grades")}
+          ${
+            phone
+              ? selectHTML("status", "Status", "All statuses")
+              : selectHTML("period", "Period", "All periods")
+          }
+          <div class="sa-field">
+            <label for="sa-filter-from">From date</label>
+            <input
+              id="sa-filter-from"
+              data-sa-filter="from"
+              type="date"
+              value="${escapeHTML(report.filters.from)}"
+            >
+          </div>
+          <div class="sa-field">
+            <label for="sa-filter-to">Through date</label>
+            <input
+              id="sa-filter-to"
+              data-sa-filter="to"
+              type="date"
+              value="${escapeHTML(report.filters.to)}"
+            >
+          </div>
+        </div>
+
+        <button class="btn btn-small" id="sa-clear">
+          Clear filters
+        </button>
+      </div>
+
+      <div id="sa-results">${resultsHTML()}</div>
+    `;
+  }
+
+  function bindPage() {
+    if (!allowed()) return;
+
+    function bindPagination() {
+      document.querySelectorAll("[data-sa-page]").forEach(button => {
+        button.onclick = () => {
+          report.page += Number(button.dataset.saPage);
+          updateResults();
+        };
+      });
+    }
+
+    function updateResults() {
+      document.getElementById("sa-results").innerHTML = resultsHTML();
+      bindPagination();
+    }
+
+    document.getElementById("sa-refresh").onclick = loadHistories;
+
+    document.querySelectorAll("[data-sa-tab]").forEach(button => {
+      button.onclick = () => {
+        report.tab = button.dataset.saTab;
+        report.page = 1;
+        report.filters.status = "";
+        report.filters.period = "";
+        render();
+      };
+    });
+
+    document.getElementById("sa-clear").onclick = () => {
+      Object.keys(report.filters).forEach(key => {
+        report.filters[key] = "";
+      });
+      report.page = 1;
+      render();
+    };
+
+    document.querySelectorAll("[data-sa-filter]").forEach(input => {
+      input.addEventListener(
+        input.type === "search" ? "input" : "change",
+        () => {
+          report.filters[input.dataset.saFilter] = input.value;
+          report.page = 1;
+          updateResults();
+        }
+      );
+    });
+
+    bindPagination();
+
+    if (!report.loaded && !report.loading) {
+      void loadHistories();
+    }
+  }
+
+  const navigation = document.querySelector("aside nav");
+  if (!navigation) return;
+
+  const button = document.createElement("button");
+  button.id = "sa-admin-nav";
+  button.dataset.view = "accountability";
+  button.textContent = "Student Accountability";
+  button.hidden = !allowed();
+  navigation.appendChild(button);
+
+  const originalRender = render;
+
+  render = function () {
+    button.hidden = !allowed();
+
+    if (view.screen !== "accountability") {
+      return originalRender.apply(this, arguments);
+    }
+
+    renderNav();
+    document.getElementById("main").innerHTML = pageHTML();
+    bind();
+    bindPage();
+  };
+
+  button.onclick = () => {
+    view = { screen: "accountability", teacherId: null };
+    render();
+  };
+
+  fbAuth.onAuthStateChanged(() => {
+    button.hidden = !allowed();
+
+    if (!allowed()) {
+      report.request++;
+      report.records.phoneConfiscations = [];
+      report.records.tardies = [];
+      report.errors = {};
+      report.loaded = false;
+      report.loading = false;
+
+      if (view.screen === "accountability") {
+        document.getElementById("main").innerHTML = pageHTML();
+      }
+    }
+  });
+})();
+</script>
 </html>
