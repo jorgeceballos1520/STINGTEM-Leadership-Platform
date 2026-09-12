@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>Student Tracker | IDEA Spears</title>
+  <title>HS Student Tracker | IDEA Spears</title>
 
   <style>
     :root{
@@ -15,7 +15,6 @@
       --muted:#687588;
       --green:#39734b;
       --red:#b94831;
-      --blue:#1f6fa5;
     }
 
     *{box-sizing:border-box}
@@ -61,7 +60,6 @@
     }
 
     select,
-    input,
     textarea{
       width:100%;
       padding:13px;
@@ -131,11 +129,10 @@
       padding:13px;
       border-radius:9px;
       font-weight:600;
+      white-space:pre-line;
     }
 
-    .alert.show{
-      display:block;
-    }
+    .alert.show{display:block}
 
     .ok{
       background:#e3f1e7;
@@ -159,11 +156,6 @@
     #tardyFields{
       display:none;
     }
-
-    .teacher{
-      margin-top:8px;
-      opacity:.9;
-    }
   </style>
 </head>
 
@@ -172,62 +164,58 @@
 <div class="app">
 
   <div class="hero">
-    <h1>Student Tracker</h1>
+    <h1>High School Student Tracker</h1>
     <div>IDEA Spears College Prep</div>
-    <div class="teacher" id="teacherDisplay"></div>
   </div>
 
   <div class="card" id="loadingCard">
-    <strong>Verifying teacher access…</strong>
+    <strong>Verifying access…</strong>
   </div>
 
   <div id="tracker">
 
     <div class="card">
 
-      <h2 style="margin-top:0">Student</h2>
+      <h2 style="margin-top:0">Staff & Student</h2>
 
-      <label for="gradeSelect">Grade</label>
+      <label for="teacherSelect">Teacher</label>
+      <select id="teacherSelect">
+        <option value="">Select teacher</option>
+      </select>
 
+      <label for="gradeSelect">Student Grade</label>
       <select id="gradeSelect">
         <option value="">Select grade</option>
       </select>
 
-
       <label for="studentSelect">Student</label>
-
       <select id="studentSelect" disabled>
         <option value="">Select student</option>
       </select>
-
 
       <div class="student-info" id="studentInfo"></div>
 
     </div>
 
-
     <div class="card">
 
-      <h2 style="margin-top:0">What happened?</h2>
+      <h2 style="margin-top:0">Reason</h2>
 
       <div class="event-buttons">
 
-        <button
-          type="button"
-          class="event-btn"
-          id="phoneBtn">
+        <button type="button"
+                class="event-btn"
+                id="phoneBtn">
           📱 Phone
         </button>
 
-        <button
-          type="button"
-          class="event-btn"
-          id="tardyBtn">
+        <button type="button"
+                class="event-btn"
+                id="tardyBtn">
           ⏰ Tardy
         </button>
 
       </div>
-
 
       <div id="tardyFields">
 
@@ -246,22 +234,19 @@
 
       </div>
 
+      <label for="notes">
+        Notes <span class="muted">(optional)</span>
+      </label>
 
-      <label for="notes">Notes <span class="muted">(optional)</span></label>
+      <textarea id="notes"
+                rows="3"
+                placeholder="Optional note"></textarea>
 
-      <textarea
-        id="notes"
-        rows="3"
-        placeholder="Optional note"></textarea>
-
-
-      <button
-        class="primary"
-        id="submitBtn"
-        disabled>
+      <button class="primary"
+              id="submitBtn"
+              disabled>
         Submit
       </button>
-
 
       <div id="message" class="alert"></div>
 
@@ -271,11 +256,9 @@
 
 </div>
 
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 
 <script>
 
@@ -298,72 +281,126 @@ const db = firebase.firestore();
 
 const $ = id => document.getElementById(id);
 
-let allStudents = [];
-let selectedStudent = null;
-let selectedEvent = "";
-let currentTeacherId = "";
-let currentTeacherName = "";
-let currentAccessKey = "";
+/* ==============================
+   SHARED HS ACCESS KEY
+============================== */
+
+const SHARED_HS_KEY = "HS-TRACKER-2026";
+
+const params =
+  new URLSearchParams(window.location.search);
+
+const suppliedKey =
+  params.get("key") || "";
 
 
 /* ==============================
-   URL ACCESS
+   TEACHERS
 ============================== */
 
-const params = new URLSearchParams(window.location.search);
+const teachers = [
+  "Kareem Abdullah",
+  "Shelby Bowen",
+  "Jeremy Byrd",
+  "Angela Castillo",
+  "Jorge Ceballos",
+  "Thanin Chow",
+  "Lenneth Conkleton",
+  "Jonishia Cook",
+  "Haylee Cranston",
+  "Geral Crawford",
+  "Omisha Dawson",
+  "Christine Duong",
+  "Adaora Emenyonu",
+  "Jakelin Faltysek",
+  "Sandra Faust",
+  "Vanessa Flores",
+  "Semora Fobbs",
+  "Sandra Garza",
+  "Deanna Hall",
+  "Mariah Hill",
+  "Nicholas Hooper",
+  "Donald Jackson Bey",
+  "Roberto Martinez",
+  "Ka Lani Mccall",
+  "Lisset Mosqueda Flores",
+  "Lavette Muhammad",
+  "Gweneta Naves",
+  "Laura Niehaus",
+  "Cornelious O'Bryant",
+  "Felix Ogbor",
+  "Jaqueline Orozco Rodriguez",
+  "Victor Pena",
+  "Danisha Porche",
+  "Raul Quiroz",
+  "Raiquaichia Raybon",
+  "James Riggs Durst",
+  "Jacqueline Robinson",
+  "Jacob Ross",
+  "Brittany Sam",
+  "Amani Sapp",
+  "Daria Sims",
+  "Tajai Tate",
+  "Tina Thomas",
+  "Shawn Thorns",
+  "Tuan Tran",
+  "Briana Trigg",
+  "Mikail Trigg",
+  "Cristina Vargas",
+  "Miguel Vargas",
+  "Braneeshia Veal",
+  "Kevon Waddell",
+  "Akinya Washington",
+  "Sharion White",
+  "Lashawn Youngblood"
+];
 
-currentTeacherId =
-  params.get("id") ||
-  params.get("teacher") ||
-  "";
+teachers.sort((a,b) =>
+  a.localeCompare(b)
+);
 
-currentAccessKey =
-  params.get("key") ||
-  "";
+let allStudents = [];
+let selectedStudent = null;
+let selectedEvent = "";
 
 
 /* ==============================
    START
 ============================== */
 
-startTracker();
+start();
 
 
-async function startTracker(){
+async function start(){
 
-  if(!currentTeacherId || !currentAccessKey){
+  if(suppliedKey !== SHARED_HS_KEY){
 
     denyAccess(
-      "This teacher link is incomplete."
+      "This High School tracker link is not valid."
     );
 
     return;
   }
 
-
   try{
 
-    let user = auth.currentUser;
-
-
-    if(!user){
-
-      const result =
-        await auth.signInAnonymously();
-
-      user = result.user;
+    if(!auth.currentUser){
+      await auth.signInAnonymously();
     }
 
+    populateTeachers();
 
-    await verifyTeacher(user);
+    await loadStudents();
 
+    $("loadingCard").style.display = "none";
+    $("tracker").style.display = "block";
 
   }catch(error){
 
     console.error(error);
 
     denyAccess(
-      "Unable to verify teacher access."
+      "Unable to open the student tracker."
     );
 
   }
@@ -372,161 +409,47 @@ async function startTracker(){
 
 
 /* ==============================
-   VERIFY TEACHER
+   TEACHERS
 ============================== */
 
-async function verifyTeacher(user){
+function populateTeachers(){
 
-  const accessRef =
-    db.collection("teacherAccess")
-      .doc(currentAccessKey);
-
-  const accessSnap =
-    await accessRef.get();
-
-
-  if(!accessSnap.exists){
-
-    denyAccess("Invalid teacher link.");
-
-    return;
-  }
-
-
-  const access =
-    accessSnap.data();
-
-
-  if(
-    access.active !== true ||
-    access.teacherId !== currentTeacherId
-  ){
-
-    denyAccess("Teacher access denied.");
-
-    return;
-  }
-
-
-  currentTeacherName =
-    access.teacherName ||
-    currentTeacherId;
-
-
-  /*
-    Check whether the anonymous browser
-    session already belongs to another teacher.
-  */
-
-  const sessionRef =
-    db.collection("teacherSessions")
-      .doc(user.uid);
-
-  const sessionSnap =
-    await sessionRef.get();
-
-
-  if(
-    sessionSnap.exists &&
-    sessionSnap.data().teacherId !== currentTeacherId
-  ){
-
-    await auth.signOut();
-
-    const fresh =
-      await auth.signInAnonymously();
-
-    user = fresh.user;
-  }
-
-
-  const finalSessionRef =
-    db.collection("teacherSessions")
-      .doc(user.uid);
-
-  const finalSessionSnap =
-    await finalSessionRef.get();
-
-
-  if(!finalSessionSnap.exists){
-
-    await finalSessionRef.set({
-
-      teacherId:currentTeacherId,
-
-      accessKey:currentAccessKey,
-
-      active:true,
-
-      createdAt:
-        firebase.firestore.FieldValue.serverTimestamp()
-
-    });
-
-  }
-
-
-  $("teacherDisplay").textContent =
-    currentTeacherName;
-
-  $("loadingCard").style.display =
-    "none";
-
-  $("tracker").style.display =
-    "block";
-
-
-  await loadStudents();
+  $("teacherSelect").innerHTML =
+    `<option value="">Select teacher</option>` +
+    teachers.map(name =>
+      `<option value="${escapeHtml(name)}">
+        ${escapeHtml(name)}
+      </option>`
+    ).join("");
 
 }
 
 
 /* ==============================
-   LOAD STUDENTS
+   STUDENTS
 ============================== */
 
 async function loadStudents(){
 
-  try{
+  const snapshot =
+    await db.collection("students").get();
 
-    const snapshot =
-      await db.collection("students").get();
+  allStudents =
+    snapshot.docs
+      .map(doc => doc.data())
+      .filter(student =>
+        student.active !== false
+      );
 
+  allStudents.sort((a,b) =>
+    (a.displayName || "")
+      .localeCompare(b.displayName || "")
+  );
 
-    allStudents =
-      snapshot.docs
-        .map(doc => doc.data())
-        .filter(student =>
-          student.active !== false
-        );
-
-
-    allStudents.sort((a,b) =>
-      (a.displayName || "")
-        .localeCompare(b.displayName || "")
-    );
-
-
-    populateGrades();
-
-
-  }catch(error){
-
-    console.error(error);
-
-    showMessage(
-      "Unable to load the student roster.",
-      "err"
-    );
-
-  }
+  populateGrades();
 
 }
 
-
-/* ==============================
-   GRADES
-============================== */
 
 function populateGrades(){
 
@@ -539,11 +462,9 @@ function populateGrades(){
         .filter(Boolean)
     )];
 
-
   grades.sort((a,b) =>
     Number(a) - Number(b)
   );
-
 
   $("gradeSelect").innerHTML =
     `<option value="">Select grade</option>` +
@@ -557,7 +478,7 @@ function populateGrades(){
 
 
 /* ==============================
-   STUDENT DROPDOWN
+   STUDENT FILTER
 ============================== */
 
 $("gradeSelect").addEventListener(
@@ -574,23 +495,17 @@ $("gradeSelect").addEventListener(
     $("studentSelect").innerHTML =
       `<option value="">Select student</option>`;
 
-
     if(!grade){
 
-      $("studentSelect").disabled =
-        true;
-
+      $("studentSelect").disabled = true;
       updateSubmitButton();
-
       return;
     }
-
 
     const students =
       allStudents.filter(student =>
         String(student.gradeLevel) === grade
       );
-
 
     students.forEach(student => {
 
@@ -608,9 +523,7 @@ $("gradeSelect").addEventListener(
 
     });
 
-
-    $("studentSelect").disabled =
-      false;
+    $("studentSelect").disabled = false;
 
     updateSubmitButton();
 
@@ -627,7 +540,6 @@ $("studentSelect").addEventListener(
         String(student.studentId) ===
         String(this.value)
       ) || null;
-
 
     if(selectedStudent){
 
@@ -650,7 +562,6 @@ $("studentSelect").addEventListener(
         "none";
 
     }
-
 
     updateSubmitButton();
 
@@ -694,6 +605,11 @@ $("tardyBtn").onclick = () => {
 };
 
 
+$("teacherSelect").addEventListener(
+  "change",
+  updateSubmitButton
+);
+
 $("periodSelect").addEventListener(
   "change",
   updateSubmitButton
@@ -701,15 +617,15 @@ $("periodSelect").addEventListener(
 
 
 /* ==============================
-   SUBMIT ENABLE / DISABLE
+   VALIDATION
 ============================== */
 
 function updateSubmitButton(){
 
   let ready =
+    $("teacherSelect").value &&
     selectedStudent &&
     selectedEvent;
-
 
   if(selectedEvent === "tardy"){
 
@@ -718,7 +634,6 @@ function updateSubmitButton(){
       $("periodSelect").value;
 
   }
-
 
   $("submitBtn").disabled =
     !ready;
@@ -737,28 +652,27 @@ async function(){
     return;
   }
 
+  const teacherName =
+    $("teacherSelect").value;
 
   $("submitBtn").disabled = true;
-
 
   showMessage(
     "Saving...",
     "info"
   );
 
-
   try{
 
     if(selectedEvent === "tardy"){
 
-      await saveTardy();
+      await saveTardy(teacherName);
 
     }else if(selectedEvent === "phone"){
 
-      await savePhone();
+      await savePhone(teacherName);
 
     }
-
 
   }catch(error){
 
@@ -777,14 +691,10 @@ async function(){
 
 
 /* ==============================
-   SAVE TARDY
+   TARDY
 ============================== */
 
-async function saveTardy(){
-
-  const period =
-    $("periodSelect").value;
-
+async function saveTardy(teacherName){
 
   await db.collection("tardies").add({
 
@@ -800,28 +710,23 @@ async function saveTardy(){
     homeRoom:
       selectedStudent.homeRoom || "",
 
-    teacherId:
-      currentTeacherId,
-
     teacherName:
-      currentTeacherName,
+      teacherName,
 
     period:
-      period,
+      $("periodSelect").value,
 
     notes:
       $("notes").value.trim(),
 
     eventDate:
-      new Date().toISOString()
-        .slice(0,10),
+      new Date().toISOString().slice(0,10),
 
     createdAt:
       firebase.firestore.FieldValue
         .serverTimestamp()
 
   });
-
 
   showMessage(
     "✓ Tardy recorded for " +
@@ -830,27 +735,20 @@ async function saveTardy(){
     "ok"
   );
 
-
   resetForm();
 
 }
 
 
 /* ==============================
-   SAVE PHONE
+   PHONE
 ============================== */
 
-async function savePhone(){
-
-  /*
-    Generate the next sequential
-    phone tracking number.
-  */
+async function savePhone(teacherName){
 
   const counterRef =
     db.collection("systemCounters")
       .doc("phoneTracking");
-
 
   const trackingNumber =
     await db.runTransaction(
@@ -859,9 +757,7 @@ async function savePhone(){
         const counterSnap =
           await transaction.get(counterRef);
 
-
         let nextNumber = 1;
-
 
         if(counterSnap.exists){
 
@@ -872,7 +768,6 @@ async function savePhone(){
 
         }
 
-
         transaction.set(
           counterRef,
           {
@@ -881,21 +776,13 @@ async function savePhone(){
           {merge:true}
         );
 
-
         return (
           "P-" +
-          String(nextNumber)
-            .padStart(5,"0")
+          String(nextNumber).padStart(5,"0")
         );
 
       }
     );
-
-
-  /*
-    Count previous confiscations
-    for this student.
-  */
 
   const previous =
     await db.collection("phoneConfiscations")
@@ -906,14 +793,11 @@ async function savePhone(){
       )
       .get();
 
-
   const occurrence =
     previous.size + 1;
 
-
   const consequence =
     getPhoneConsequence(occurrence);
-
 
   await db.collection("phoneConfiscations").add({
 
@@ -932,11 +816,8 @@ async function savePhone(){
     homeRoom:
       selectedStudent.homeRoom || "",
 
-    teacherId:
-      currentTeacherId,
-
     teacherName:
-      currentTeacherName,
+      teacherName,
 
     occurrence:
       occurrence,
@@ -951,8 +832,7 @@ async function savePhone(){
       $("notes").value.trim(),
 
     eventDate:
-      new Date().toISOString()
-        .slice(0,10),
+      new Date().toISOString().slice(0,10),
 
     createdAt:
       firebase.firestore.FieldValue
@@ -960,12 +840,12 @@ async function savePhone(){
 
   });
 
-
   showMessage(
-    "✓ Phone recorded.\n\n" +
+    "✓ PHONE RECORDED\n\n" +
     "Tracking Number: " +
     trackingNumber +
-    "\n" +
+    "\n\n" +
+    "Write this number on the sticky note attached to the phone.\n\n" +
     "Occurrence: #" +
     occurrence +
     "\n" +
@@ -974,15 +854,10 @@ async function savePhone(){
     "ok"
   );
 
-
-  resetForm(false);
+  resetForm();
 
 }
 
-
-/* ==============================
-   PHONE CONSEQUENCE
-============================== */
 
 function getPhoneConsequence(number){
 
@@ -1007,11 +882,12 @@ function getPhoneConsequence(number){
    RESET
 ============================== */
 
-function resetForm(clearMessage = true){
+function resetForm(){
 
   selectedStudent = null;
   selectedEvent = "";
 
+  $("teacherSelect").value = "";
   $("gradeSelect").value = "";
 
   $("studentSelect").innerHTML =
@@ -1019,22 +895,14 @@ function resetForm(clearMessage = true){
 
   $("studentSelect").disabled = true;
 
-  $("studentInfo").style.display =
-    "none";
+  $("studentInfo").style.display = "none";
 
-  $("phoneBtn").classList.remove(
-    "active"
-  );
+  $("phoneBtn").classList.remove("active");
+  $("tardyBtn").classList.remove("active");
 
-  $("tardyBtn").classList.remove(
-    "active"
-  );
-
-  $("tardyFields").style.display =
-    "none";
+  $("tardyFields").style.display = "none";
 
   $("periodSelect").value = "";
-
   $("notes").value = "";
 
   $("submitBtn").disabled = true;
@@ -1043,7 +911,7 @@ function resetForm(clearMessage = true){
 
 
 /* ==============================
-   MESSAGES
+   HELPERS
 ============================== */
 
 function showMessage(text,type){
@@ -1051,21 +919,12 @@ function showMessage(text,type){
   const element =
     $("message");
 
-  element.textContent =
-    text;
-
-  element.style.whiteSpace =
-    "pre-line";
-
+  element.textContent = text;
   element.className =
     "alert show " + type;
 
 }
 
-
-/* ==============================
-   ACCESS DENIED
-============================== */
 
 function denyAccess(message){
 
@@ -1075,10 +934,6 @@ function denyAccess(message){
 
 }
 
-
-/* ==============================
-   ESCAPE HTML
-============================== */
 
 function escapeHtml(value){
 
