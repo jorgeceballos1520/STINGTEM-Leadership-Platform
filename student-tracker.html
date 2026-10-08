@@ -60,7 +60,8 @@
     }
 
     select,
-    textarea{
+    textarea,
+    input{
       width:100%;
       padding:13px;
       border:1px solid var(--border);
@@ -192,6 +193,17 @@
       <select id="studentSelect" disabled>
         <option value="">Select student</option>
       </select>
+
+      <div id="manualStudentFields" style="display:none">
+        <label for="manualStudentName">Student Name</label>
+        <input id="manualStudentName"
+               type="text"
+               autocomplete="off"
+               placeholder="Enter student's full name">
+        <div class="muted" style="margin-top:6px">
+          Use this only when the student is not listed above.
+        </div>
+      </div>
 
       <div class="student-info" id="studentInfo"></div>
 
@@ -591,6 +603,9 @@ $("gradeSelect").addEventListener(
     $("studentSelect").innerHTML =
       `<option value="">Select student</option>`;
 
+    $("manualStudentFields").style.display = "none";
+    $("manualStudentName").value = "";
+
     if(!grade){
 
       $("studentSelect").disabled = true;
@@ -619,6 +634,11 @@ $("gradeSelect").addEventListener(
 
     });
 
+    const manualOption = document.createElement("option");
+    manualOption.value = "__MANUAL__";
+    manualOption.textContent = "Student not listed? Enter manually";
+    $("studentSelect").appendChild(manualOption);
+
     $("studentSelect").disabled = false;
 
     updateSubmitButton();
@@ -630,6 +650,19 @@ $("gradeSelect").addEventListener(
 $("studentSelect").addEventListener(
   "change",
   function(){
+
+    if(this.value === "__MANUAL__"){
+
+      selectedStudent = null;
+      $("manualStudentFields").style.display = "block";
+      $("studentInfo").style.display = "none";
+      $("manualStudentName").focus();
+      updateManualStudent();
+      return;
+    }
+
+    $("manualStudentFields").style.display = "none";
+    $("manualStudentName").value = "";
 
     selectedStudent =
       allStudents.find(student =>
@@ -663,6 +696,57 @@ $("studentSelect").addEventListener(
 
   }
 );
+
+
+$("manualStudentName").addEventListener(
+  "input",
+  updateManualStudent
+);
+
+
+function updateManualStudent(){
+
+  const manualMode =
+    $("studentSelect").value === "__MANUAL__";
+
+  if(!manualMode){
+    return;
+  }
+
+  const name =
+    $("manualStudentName").value.trim();
+
+  const grade =
+    $("gradeSelect").value;
+
+  if(name && grade){
+
+    selectedStudent = {
+      studentId: "",
+      displayName: name,
+      gradeLevel: grade,
+      homeRoom: "",
+      manualStudentEntry: true
+    };
+
+    $("studentInfo").innerHTML = `
+      <strong>${escapeHtml(name)}</strong>
+      <br>
+      Grade ${escapeHtml(grade)}
+      · Manually entered student
+    `;
+
+    $("studentInfo").style.display = "block";
+
+  }else{
+
+    selectedStudent = null;
+    $("studentInfo").style.display = "none";
+
+  }
+
+  updateSubmitButton();
+}
 
 
 /* ==============================
@@ -806,6 +890,9 @@ async function saveTardy(teacherName){
     homeRoom:
       selectedStudent.homeRoom || "",
 
+    manualStudentEntry:
+      selectedStudent.manualStudentEntry === true,
+
     teacherName:
       teacherName,
 
@@ -880,14 +967,41 @@ async function savePhone(teacherName){
       }
     );
 
-  const previous =
-    await db.collection("phoneConfiscations")
-      .where(
-        "studentId",
-        "==",
-        selectedStudent.studentId
-      )
-      .get();
+  let previous;
+
+  if(selectedStudent.manualStudentEntry === true){
+
+    // Manual students do not have an official student ID.
+    // Match by entered name, then keep only records from the same grade.
+    const manualMatches =
+      await db.collection("phoneConfiscations")
+        .where(
+          "studentName",
+          "==",
+          selectedStudent.displayName
+        )
+        .get();
+
+    const sameGradeCount =
+      manualMatches.docs.filter(doc =>
+        String(doc.data().gradeLevel || "") ===
+        String(selectedStudent.gradeLevel || "")
+      ).length;
+
+    previous = { size: sameGradeCount };
+
+  }else{
+
+    previous =
+      await db.collection("phoneConfiscations")
+        .where(
+          "studentId",
+          "==",
+          selectedStudent.studentId
+        )
+        .get();
+
+  }
 
   const occurrence =
     previous.size + 1;
@@ -911,6 +1025,9 @@ async function savePhone(teacherName){
 
     homeRoom:
       selectedStudent.homeRoom || "",
+
+    manualStudentEntry:
+      selectedStudent.manualStudentEntry === true,
 
     teacherName:
       teacherName,
@@ -990,6 +1107,9 @@ function resetForm(){
     `<option value="">Select student</option>`;
 
   $("studentSelect").disabled = true;
+
+  $("manualStudentFields").style.display = "none";
+  $("manualStudentName").value = "";
 
   $("studentInfo").style.display = "none";
 
